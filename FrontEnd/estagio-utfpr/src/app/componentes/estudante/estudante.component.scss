@@ -1,0 +1,58 @@
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .search-box {
+    margin-bottom: 20px;
+  }
+  
+  .search-box input {
+    padding: 8px;
+    width: 300px;
+    margin-right: 10px;
+  }
+  
+  .search-box button {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .search-box button:hover {
+    background-color: #0056b3;
+  }
+  
+  .result-container {
+    margin-top: 20px;
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 5px;
+  }
+  
+  .periodo-container {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .periodo-container:last-child {
+    border-bottom: none;
+  }
+  
+  .relatorios-section {
+    margin-left: 20px;
+  }
+  
+  .relatorios-section ul {
+    list-style-type: none;
+    padding-left: 0;
+  }
+  
+  .relatorios-section li {
+    padding: 5px 0;
+  }
