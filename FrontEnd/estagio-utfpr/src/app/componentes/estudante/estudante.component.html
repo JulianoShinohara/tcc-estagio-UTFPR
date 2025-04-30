@@ -1,0 +1,32 @@
+<div class="container">
+    <h2>Consulta de Estágio</h2>
+    
+    <div class="search-box">
+      <input type="text" [(ngModel)]="nomeEstudante" placeholder="Digite o nome do estudante">
+      <button (click)="buscarEstagio()">Buscar</button>
+    </div>
+  
+    <div *ngIf="estudante" class="result-container">
+        <h3>Estagiário: {{estudante?.nomeEstudante}}</h3>
+      
+      <div *ngFor="let periodo of estudante.periodosEstagio; let i = index" class="periodo-container">
+        <h4>Período {{i + 1}}</h4>
+        <p>
+          <strong>Início:</strong> {{formatarData(periodo.dataInicioEstagio)}} | 
+          <strong>Término:</strong> {{formatarData(periodo.dataTerminoEstagio)}}
+        </p>
+        
+        <div class="relatorios-section">
+          <h5>Relatórios Parciais:</h5>
+          <ul>
+            <li *ngFor="let relatorio of periodo.datasRelatoriosParciais">
+              {{formatarData(relatorio.inicioPeriodo)}} - {{formatarData(relatorio.fimPeriodo)}}
+            </li>
+          </ul>
+          
+          <p><strong>Relatório de Visita:</strong> {{formatarData(periodo.dataRelatorioVisita)}}</p>
+          <p><strong>Relatório Final:</strong> {{formatarData(periodo.dataRelatorioFinal)}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
