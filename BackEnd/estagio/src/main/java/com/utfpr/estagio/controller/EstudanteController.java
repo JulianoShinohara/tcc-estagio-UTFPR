@@ -25,13 +25,13 @@ public class EstudanteController {
 	private final EstudanteService estudanteService;
 
 	@GetMapping("/{nome}")
-	public ResponseEntity<EstudanteDto> getEstagio(@PathVariable String nome) {
+	public ResponseEntity<EstudanteDto> getEstagio(@PathVariable String nome) throws Exception {
 		try {
 			String nomeDecodificado = URLDecoder.decode(nome, StandardCharsets.UTF_8.name());
 			return estudanteService.getEstagioPorNome(nomeDecodificado).map(ResponseEntity::ok)
 					.orElseGet(() -> ResponseEntity.notFound().build());
 		} catch (IOException e) {
-			return ResponseEntity.internalServerError().build();
+			throw e;
 		}
 	}
 }
