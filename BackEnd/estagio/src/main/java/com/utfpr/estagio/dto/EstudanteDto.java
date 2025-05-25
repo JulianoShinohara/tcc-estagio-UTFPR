@@ -30,31 +30,22 @@ public class EstudanteDto {
         
         private AvaliacaoDto intervaloAvaliacao;
         
-        
         @JsonFormat(pattern = "dd/MM/yyyy")
         private LocalDate dataRelatorioVisita;
         
+        @Builder.Default
+        private boolean enviadoRelatorioVisita = false;
+
         @JsonFormat(pattern = "dd/MM/yyyy")
         private LocalDate dataRelatorioFinal; 
         
-        @Data
-        @Builder
-        public static class DatasRelatoriosParciaisAlunoDto {
-            @JsonFormat(pattern = "dd/MM/yyyy")
-            private LocalDate inicioPeriodoRelatorio;
-            
-            @JsonFormat(pattern = "dd/MM/yyyy")
-            private LocalDate fimPeriodoRelatorio;
-        }
+        @Builder.Default
+        private boolean enviadoRelatorioFinal = false;
         
-        @Data
-        @Builder
-        public static class DatasRelatoriosParciaisOrientadorDto {
-            @JsonFormat(pattern = "dd/MM/yyyy")
-            private LocalDate inicioPeriodoRelatorio;
-            
-            @JsonFormat(pattern = "dd/MM/yyyy")
-            private LocalDate fimPeriodoRelatorio;
-        }
+        private Boolean obrigatorio;
+        
+        private String empresa;
+        
+        
     }
 }

@@ -22,7 +22,7 @@ public class GoogleSheetsConfig {
 
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS);
-    private static final String CREDENTIALS_FILE = "utfpr-estagio-73b741d99eff.json";
+    private static final String CREDENTIALS_FILE = "western-lambda-459416-j5-5528117ee8e5.json";
 
     @Bean
     public Sheets sheetsService() throws GeneralSecurityException, IOException {
