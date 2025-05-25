@@ -19,14 +19,30 @@ public class GoogleSheetsService {
 	private final Sheets sheetsService;
 	
 	String spreadsheetId = "1DwWQaW7U5ap8THvKoed8ozUu4xWyBk-jX3VTfJtTeYc";
-	String range = "Estágios!A1:Z";
+	String rangeEstagio = "Estágios!A1:Z";
+	String rangeRelatorio = "Relatórios!A1:Z";
+	String rangeSemestre = "Semestre!A1:Z";
 
 	public List<List<Object>> getEstudantesFromSheet() throws IOException {
         ValueRange response = sheetsService.spreadsheets().values()
-                .get(spreadsheetId, range)
+                .get(spreadsheetId, rangeEstagio)
                 .execute();
         
         return response.getValues();
     }
 	
+	
+	public List<List<Object>> getRelatoriosEnviadosFromSheet() throws IOException {
+	    ValueRange response = sheetsService.spreadsheets().values()
+	            .get(spreadsheetId, rangeRelatorio)
+	            .execute();
+	    return response.getValues();
+	}
+	
+	public List<List<Object>> getCalendarioAcademicoFromSheet() throws IOException {
+	    ValueRange response = sheetsService.spreadsheets().values()
+	            .get(spreadsheetId, rangeSemestre)
+	            .execute();
+	    return response.getValues();
+	}
 }

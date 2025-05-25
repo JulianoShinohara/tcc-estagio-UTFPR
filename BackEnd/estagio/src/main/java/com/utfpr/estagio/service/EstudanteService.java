@@ -3,19 +3,25 @@ package com.utfpr.estagio.service;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.utfpr.estagio.dto.AvaliacaoDto;
+import com.utfpr.estagio.dto.DatasRelatoriosParciaisAlunoDto;
+import com.utfpr.estagio.dto.DatasRelatoriosParciaisOrientadorDto;
 import com.utfpr.estagio.dto.EstudanteDto;
-import com.utfpr.estagio.dto.EstudanteDto.PeriodoEstagioDto.DatasRelatoriosParciaisAlunoDto;
-import com.utfpr.estagio.dto.EstudanteDto.PeriodoEstagioDto.DatasRelatoriosParciaisOrientadorDto;
+import com.utfpr.estagio.dto.EstudanteDto.PeriodoEstagioDto;
+import com.utfpr.estagio.service.CalendarioAcademicoService.SemestreAcademico;
 
 @Service
 public class EstudanteService {
@@ -27,13 +33,23 @@ public class EstudanteService {
 	private CalendarioAcademicoService calendarioService;
 
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+	// Colunas da tabela de relatórios enviados (Tabela Estágios)
 	private static final int COL_NOME = 0; // "Nome Estagiário"
+	private static final int COL_EMPRESA = 5; // Nome da empresa
 	private static final int COL_INICIO = 6; // "Início do Estágio"
 	private static final int COL_TERMINO = 7; // "Término do Estágio"
 	private static final int COL_CARGA_HORARIA_SEMANAL = 11; // Horas trabalhadas por semana
+	private static final int COL_BOOL_OBRIGATORIO = 13; // Estagio Obrigatorio ou não
+
+	// Colunas da tabela de relatórios enviados (Tabela Relatórios)
+	private static final int COL_NOME_RELATORIO = 0; // Nome do estagiário na tabela de relatórios
+	private static final int COL_TIPO_RELATORIO = 2; // Tipo de relatório
+	private static final int COL_DATA_INICIO_RELATORIO = 3; // Data inicial do relatório
+	private static final int COL_DATA_FIM_RELATORIO = 4; // Data final do relatório
 
 	// Quantidade de meses para calcular o periodo de entrega do relatorio parcial
-	private static final int QTDE_MES_RELATORIO_PARCIAL = 6; 
+	private static final int QTDE_MES_RELATORIO_PARCIAL = 6;
 
 	// Caso a pessoa não tenha cadastrado a quantidade de horas semanais trabalhado,
 	// é definido "QTDE_DIAS_VISITA_TECNICA_PADRÃO" (30 dias) por padrão.
@@ -51,30 +67,75 @@ public class EstudanteService {
 	 */
 	public Optional<EstudanteDto> getEstagioPorNome(String nomeEstudante) throws IOException {
 		String nomeDecodificado = URLDecoder.decode(nomeEstudante, StandardCharsets.UTF_8);
+		String nomeNormalizado = normalizarString(nomeDecodificado);
 		List<List<Object>> valores = googleSheetsService.getEstudantesFromSheet();
+		List<List<Object>> relatoriosEnviados = googleSheetsService.getRelatoriosEnviadosFromSheet();
 
 		List<EstudanteDto.PeriodoEstagioDto> periodos = new ArrayList<>();
 
 		for (List<Object> linha : valores) {
-			if (nomeDecodificado.equalsIgnoreCase(linha.get(COL_NOME).toString())) {
+			if (nomeNormalizado.equalsIgnoreCase(normalizarString(linha.get(COL_NOME).toString()))) {
+
 				LocalDate inicio = LocalDate.parse(linha.get(COL_INICIO).toString(), DATE_FORMATTER);
 				LocalDate termino = LocalDate.parse(linha.get(COL_TERMINO).toString(), DATE_FORMATTER);
+				String nomeEmpresa = linha.get(COL_EMPRESA).toString();
 				int cargaHorariaSemanal = Integer.parseInt((String) linha.get(COL_CARGA_HORARIA_SEMANAL));
-				
-		        AvaliacaoDto intervalo = calcularIntervaloAvaliacao(
-		            termino,
-		            calendarioService.getSemestre(termino),
-		            termino.getYear()
-		        );
 
-				EstudanteDto.PeriodoEstagioDto periodo = EstudanteDto.PeriodoEstagioDto.builder()
-						.dataInicioEstagio(inicio).dataTerminoEstagio(termino)
-						.datasRelatoriosParciaisAluno(calcularPeriodosRelatoriosAluno(inicio, termino))
-						.datasRelatoriosParciaisOrientador(calcularPeriodosRelatoriosOrientador(inicio, termino))
-						.dataRelatorioVisita(calcularDataRelatorioVisita(inicio, cargaHorariaSemanal))
+				boolean obrigatorio = "sim".equalsIgnoreCase(linha.get(COL_BOOL_OBRIGATORIO).toString());
+				
+				
+				List<DatasRelatoriosParciaisAlunoDto> relatoriosEnviadosAluno = relatoriosEnviados.stream()
+		                .filter(r -> nomeNormalizado.equalsIgnoreCase(normalizarString(r.get(COL_NOME_RELATORIO).toString())))
+		                .filter(r -> "Relatório parcial do estagiário".equalsIgnoreCase(r.get(COL_TIPO_RELATORIO).toString()))
+		                .map(r -> {
+		                    try {
+		                        return DatasRelatoriosParciaisAlunoDto.builder()
+		                            .inicioPeriodoRelatorio(LocalDate.parse(r.get(COL_DATA_INICIO_RELATORIO).toString(), DATE_FORMATTER))
+		                            .fimPeriodoRelatorio(LocalDate.parse(r.get(COL_DATA_FIM_RELATORIO).toString(), DATE_FORMATTER))
+		                            .enviado(true)
+		                            .build();
+		                    } catch (Exception e) {
+		                        System.err.println("Erro ao parsear datas do relatório: " + e.getMessage());
+		                        return null;
+		                    }
+		                })
+		                .filter(Objects::nonNull)
+		                .sorted(Comparator.comparing(DatasRelatoriosParciaisAlunoDto::getInicioPeriodoRelatorio))
+		                .collect(Collectors.toList());
+
+				List<DatasRelatoriosParciaisAlunoDto> periodosAluno = calcularPeriodosComRelatorios(inicio, termino, relatoriosEnviadosAluno);
+				
+				
+				
+				
+				List<DatasRelatoriosParciaisOrientadorDto> relatoriosOrientador = calcularPeriodosRelatoriosOrientador(
+						inicio, termino);
+
+				EstudanteDto.PeriodoEstagioDto.PeriodoEstagioDtoBuilder periodoBuilder = EstudanteDto.PeriodoEstagioDto
+						.builder()
+						.dataInicioEstagio(inicio)
+						.dataTerminoEstagio(termino)
+						.datasRelatoriosParciaisAluno(periodosAluno)
+						.datasRelatoriosParciaisOrientador(relatoriosOrientador)
 						.dataRelatorioFinal(calcularDataRelatorioFinal(termino))
-						.intervaloAvaliacao(intervalo)
-						.build();
+						.empresa(nomeEmpresa)
+						.obrigatorio(obrigatorio);
+				
+				if (obrigatorio) {
+					LocalDate dataRelatorioVisita = calcularDataRelatorioVisita(inicio, cargaHorariaSemanal);
+
+					SemestreAcademico semestreAtual = calendarioService.identificarSemestre(termino);
+					AvaliacaoDto intervaloAvaliacao = calcularIntervaloAvaliacao(termino, semestreAtual);
+
+					periodoBuilder.dataRelatorioVisita(dataRelatorioVisita).intervaloAvaliacao(intervaloAvaliacao).obrigatorio(true);
+
+				}
+
+				EstudanteDto.PeriodoEstagioDto periodo = periodoBuilder.build();
+
+				verificarRelatoriosEnviados(nomeNormalizado, relatoriosEnviados, periodosAluno, relatoriosOrientador,
+						obrigatorio ? periodo.getDataRelatorioVisita() : null,
+						obrigatorio ? periodo.getDataRelatorioFinal() : null, periodo);
 
 				periodos.add(periodo);
 			}
@@ -92,29 +153,103 @@ public class EstudanteService {
 
 	/**
 	 * 
+	 * @param nomeEstudante
+	 * @param relatoriosEnviados
+	 * @param relatoriosAluno
+	 * @param relatoriosOrientador
+	 * @param dataRelatorioVisita
+	 * @param dataRelatorioFinal
+	 */
+	private void verificarRelatoriosEnviados(String nomeEstudante, List<List<Object>> relatoriosEnviados,
+			List<DatasRelatoriosParciaisAlunoDto> relatoriosAluno,
+			List<DatasRelatoriosParciaisOrientadorDto> relatoriosOrientador, LocalDate dataRelatorioVisita,
+			LocalDate dataRelatorioFinal, PeriodoEstagioDto periodoDto) {
+
+		for (List<Object> relatorioEnviado : relatoriosEnviados) {
+			String nomeRelatorio = relatorioEnviado.get(COL_NOME_RELATORIO).toString();
+			String nomeDecodificado = URLDecoder.decode(nomeRelatorio, StandardCharsets.UTF_8);
+			String nomeNormalizado = normalizarString(nomeDecodificado);
+
+			if (!nomeEstudante.equalsIgnoreCase(nomeNormalizado)) {
+				continue;
+			}
+
+			String tipoRelatorio = relatorioEnviado.get(COL_TIPO_RELATORIO).toString();
+			LocalDate dataInicio = LocalDate.parse(relatorioEnviado.get(COL_DATA_INICIO_RELATORIO).toString(),
+					DATE_FORMATTER);
+			LocalDate dataFim = LocalDate.parse(relatorioEnviado.get(COL_DATA_FIM_RELATORIO).toString(),
+					DATE_FORMATTER);
+
+			if (tipoRelatorio.equalsIgnoreCase("Relatório parcial do estagiário")) {
+				for (DatasRelatoriosParciaisAlunoDto relatorio : relatoriosAluno) {
+					if (relatorio.getInicioPeriodoRelatorio().equals(dataInicio)
+							&& relatorio.getFimPeriodoRelatorio().equals(dataFim)) {
+						relatorio.setEnviado(true);
+					}
+				}
+			} else if (tipoRelatorio.equalsIgnoreCase("Relatório parcial do supervisor")) {
+				for (DatasRelatoriosParciaisOrientadorDto relatorio : relatoriosOrientador) {
+					if (relatorio.getInicioPeriodoRelatorio().equals(dataInicio)
+							&& relatorio.getFimPeriodoRelatorio().equals(dataFim)) {
+						relatorio.setEnviado(true);
+					}
+				}
+			}
+			if (tipoRelatorio.equalsIgnoreCase("Relatório de visita à UCE") && dataRelatorioVisita != null
+					&& dataRelatorioVisita.equals(dataFim)) {
+				periodoDto.setEnviadoRelatorioVisita(true);
+			}
+
+			if (tipoRelatorio.equalsIgnoreCase("Relatório final") && dataRelatorioFinal != null
+					&& dataRelatorioFinal.equals(dataFim)) {
+				periodoDto.setEnviadoRelatorioFinal(true);
+			}
+		}
+	}
+
+	/**
+	 * 
 	 * @param inicio
 	 * @param termino
 	 * @return
 	 */
-	private List<DatasRelatoriosParciaisAlunoDto> calcularPeriodosRelatoriosAluno(LocalDate inicio, LocalDate termino) {
-		List<DatasRelatoriosParciaisAlunoDto> periodos = new ArrayList<>();
-		LocalDate inicioPeriodo = inicio;
-		LocalDate fimPeriodo = inicio.plusMonths(QTDE_MES_RELATORIO_PARCIAL).minusDays(1);
+	private List<DatasRelatoriosParciaisAlunoDto> calcularPeriodosComRelatorios(
+		    LocalDate inicio, 
+		    LocalDate termino,
+		    List<DatasRelatoriosParciaisAlunoDto> relatoriosEnviados) {
+		    
+		    List<DatasRelatoriosParciaisAlunoDto> periodos = new ArrayList<>();
+		    LocalDate dataAtual = inicio;
+		    int indexRelatorio = 0;
 
-		while (inicioPeriodo.isBefore(termino)) {
-			if (fimPeriodo.isAfter(termino)) {
-				fimPeriodo = termino;
-			}
+		    while (dataAtual.isBefore(termino)) {
+		        LocalDate fimPeriodo = dataAtual.plusMonths(QTDE_MES_RELATORIO_PARCIAL).minusDays(1);
+		        if (fimPeriodo.isAfter(termino)) {
+		            fimPeriodo = termino;
+		        }
 
-			periodos.add(DatasRelatoriosParciaisAlunoDto.builder().inicioPeriodoRelatorio(inicioPeriodo)
-					.fimPeriodoRelatorio(fimPeriodo).build());
+		        if (indexRelatorio < relatoriosEnviados.size()) {
+		            DatasRelatoriosParciaisAlunoDto relatorio = relatoriosEnviados.get(indexRelatorio);
+		            
+		            if (!relatorio.getInicioPeriodoRelatorio().isAfter(fimPeriodo.plusDays(7))) {
+		                periodos.add(relatorio);
+		                dataAtual = relatorio.getFimPeriodoRelatorio().plusDays(1);
+		                indexRelatorio++;
+		                continue;
+		            }
+		        }
 
-			inicioPeriodo = fimPeriodo.plusDays(1);
-			fimPeriodo = inicioPeriodo.plusMonths(QTDE_MES_RELATORIO_PARCIAL).minusDays(1);
+		        periodos.add(DatasRelatoriosParciaisAlunoDto.builder()
+		            .inicioPeriodoRelatorio(dataAtual)
+		            .fimPeriodoRelatorio(fimPeriodo)
+		            .enviado(false)
+		            .build());
+		        
+		        dataAtual = fimPeriodo.plusDays(1);
+		    }
+
+		    return periodos;
 		}
-
-		return periodos;
-	}
 
 	/**
 	 * 
@@ -153,7 +288,6 @@ public class EstudanteService {
 			return dataInicio.plusDays(QTDE_DIAS_VISITA_TECNICA_PADRAO);
 		}
 
-		// Calcula quantas semanas são necessárias para atingir 100 horas
 		double semanasNecessarias = (double) HORAS_TOTAIS_RELATORIO_VISITA / cargaHorariaSemanal;
 		int diasNecessarios = (int) Math.ceil(semanasNecessarias * 7);
 
@@ -169,20 +303,26 @@ public class EstudanteService {
 		return dataTermino.plusDays(7);
 	}
 
-	public AvaliacaoDto calcularIntervaloAvaliacao(LocalDate terminoEstagio, int semestre, int ano) {
-		LocalDate finalSemestre = calendarioService.getFinalSemestre(ano, semestre);
-		LocalDate duasSemanasAntes = finalSemestre.minusWeeks(2);
+	private AvaliacaoDto calcularIntervaloAvaliacao(LocalDate termino, SemestreAcademico semestreAtual)
+			throws IOException {
+		LocalDate duasSemanasAntesFinal = semestreAtual.dataFinal().minusWeeks(2);
 
-		// Caso Normal: Pós-término até final do semestre
-		if (terminoEstagio.isBefore(duasSemanasAntes)) {
-			return new AvaliacaoDto(terminoEstagio.plusDays(1), finalSemestre);
-		} else {
-			// Caso Especial: 1º ao 15º dia do próximo semestre
-			int proximoSemestre = semestre == 1 ? 2 : 1;
-			int proximoAno = semestre == 1 ? ano : ano + 1;
-			LocalDate inicioProximoSemestre = calendarioService.getInicioProximoSemestre(proximoAno, proximoSemestre);
+		if (termino.isAfter(duasSemanasAntesFinal)) {
+			SemestreAcademico proximoSemestre = calendarioService.getSemestreInfo(
+					semestreAtual.semestre() == 1 ? semestreAtual.ano() : semestreAtual.ano() + 1,
+					semestreAtual.semestre() == 1 ? 2 : 1);
+			if (termino.isBefore(proximoSemestre.dataInicio())) {
+				return new AvaliacaoDto(proximoSemestre.dataInicio(), proximoSemestre.dataInicio().plusDays(14));
 
-			return new AvaliacaoDto(inicioProximoSemestre, inicioProximoSemestre.plusDays(14));
+			}
+			return new AvaliacaoDto(proximoSemestre.dataInicio(), proximoSemestre.dataInicio().plusDays(14));
 		}
+
+		return new AvaliacaoDto(termino.plusDays(1), semestreAtual.dataFinal());
+
+	}
+
+	private String normalizarString(String str) {
+		return Normalizer.normalize(str, Normalizer.Form.NFD).replaceAll("\\p{M}", "").toLowerCase();
 	}
 }
