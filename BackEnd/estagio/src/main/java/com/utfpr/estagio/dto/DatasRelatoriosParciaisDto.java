@@ -9,7 +9,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class DatasRelatoriosParciaisAlunoDto {
+public class DatasRelatoriosParciaisDto {
 	@JsonFormat(pattern = "dd/MM/yyyy")
 	private LocalDate inicioPeriodoRelatorio;
 

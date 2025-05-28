@@ -8,10 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.utfpr.estagio.dto.EstudanteDto;
+import com.utfpr.estagio.service.EmailNotificationService;
 import com.utfpr.estagio.service.EstudanteService;
 
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,10 @@ public class EstudanteController {
 
 	@Autowired
 	private final EstudanteService estudanteService;
+	
+	@Autowired
+	private final EmailNotificationService emailNotificationService;
+	
 
 	@GetMapping("/{nome}")
 	public ResponseEntity<EstudanteDto> getEstagio(@PathVariable String nome) throws Exception {
@@ -34,4 +40,15 @@ public class EstudanteController {
 			throw e;
 		}
 	}
+	
+	@PostMapping("/notifica")
+	public ResponseEntity<String> notificação() throws Exception {
+		try {
+			emailNotificationService.enviarLembretesDiarios();
+			return ResponseEntity.ok("ENVIOU");
+		} catch (Exception e) {
+			throw e;
+		}
+	}
+	
 }

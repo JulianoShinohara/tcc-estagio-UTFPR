@@ -17,8 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.utfpr.estagio.dto.AvaliacaoDto;
-import com.utfpr.estagio.dto.DatasRelatoriosParciaisAlunoDto;
-import com.utfpr.estagio.dto.DatasRelatoriosParciaisOrientadorDto;
+import com.utfpr.estagio.dto.DatasRelatoriosParciaisDto;
 import com.utfpr.estagio.dto.EstudanteDto;
 import com.utfpr.estagio.dto.EstudanteDto.PeriodoEstagioDto;
 import com.utfpr.estagio.service.CalendarioAcademicoService.SemestreAcademico;
@@ -73,7 +72,8 @@ public class EstudanteService {
 
 		List<EstudanteDto.PeriodoEstagioDto> periodos = new ArrayList<>();
 
-		for (List<Object> linha : valores) {
+		List<List<Object>> valoresSemCabecalho = valores.subList(1, valores.size());
+		for (List<Object> linha : valoresSemCabecalho) {
 			if (nomeNormalizado.equalsIgnoreCase(normalizarString(linha.get(COL_NOME).toString()))) {
 
 				LocalDate inicio = LocalDate.parse(linha.get(COL_INICIO).toString(), DATE_FORMATTER);
@@ -84,38 +84,53 @@ public class EstudanteService {
 				boolean obrigatorio = "sim".equalsIgnoreCase(linha.get(COL_BOOL_OBRIGATORIO).toString());
 				
 				
-				List<DatasRelatoriosParciaisAlunoDto> relatoriosEnviadosAluno = relatoriosEnviados.stream()
+				List<DatasRelatoriosParciaisDto> relatoriosEnviadosAluno = relatoriosEnviados.stream()
 		                .filter(r -> nomeNormalizado.equalsIgnoreCase(normalizarString(r.get(COL_NOME_RELATORIO).toString())))
 		                .filter(r -> "Relatório parcial do estagiário".equalsIgnoreCase(r.get(COL_TIPO_RELATORIO).toString()))
 		                .map(r -> {
 		                    try {
-		                        return DatasRelatoriosParciaisAlunoDto.builder()
+		                        return DatasRelatoriosParciaisDto.builder()
 		                            .inicioPeriodoRelatorio(LocalDate.parse(r.get(COL_DATA_INICIO_RELATORIO).toString(), DATE_FORMATTER))
 		                            .fimPeriodoRelatorio(LocalDate.parse(r.get(COL_DATA_FIM_RELATORIO).toString(), DATE_FORMATTER))
 		                            .enviado(true)
 		                            .build();
 		                    } catch (Exception e) {
-		                        System.err.println("Erro ao parsear datas do relatório: " + e.getMessage());
-		                        return null;
+		                    	throw e;
 		                    }
 		                })
 		                .filter(Objects::nonNull)
-		                .sorted(Comparator.comparing(DatasRelatoriosParciaisAlunoDto::getInicioPeriodoRelatorio))
+		                .sorted(Comparator.comparing(DatasRelatoriosParciaisDto::getInicioPeriodoRelatorio))
 		                .collect(Collectors.toList());
 
-				List<DatasRelatoriosParciaisAlunoDto> periodosAluno = calcularPeriodosComRelatorios(inicio, termino, relatoriosEnviadosAluno);
+				List<DatasRelatoriosParciaisDto> relatoriosAluno = calcularPeriodosComRelatorios(inicio, termino, relatoriosEnviadosAluno);
+				
+				List<DatasRelatoriosParciaisDto> relatoriosEnviadosOrientador = relatoriosEnviados.stream()
+		                .filter(r -> nomeNormalizado.equalsIgnoreCase(normalizarString(r.get(COL_NOME_RELATORIO).toString())))
+		                .filter(r -> "Relatório parcial do supervisor".equalsIgnoreCase(r.get(COL_TIPO_RELATORIO).toString()))
+		                .map(r -> {
+		                    try {
+		                        return DatasRelatoriosParciaisDto.builder()
+		                            .inicioPeriodoRelatorio(LocalDate.parse(r.get(COL_DATA_INICIO_RELATORIO).toString(), DATE_FORMATTER))
+		                            .fimPeriodoRelatorio(LocalDate.parse(r.get(COL_DATA_FIM_RELATORIO).toString(), DATE_FORMATTER))
+		                            .enviado(true)
+		                            .build();
+		                    } catch (Exception e) {
+		                        throw e;
+		                    }
+		                })
+		                .filter(Objects::nonNull)
+		                .sorted(Comparator.comparing(DatasRelatoriosParciaisDto::getInicioPeriodoRelatorio))
+		                .collect(Collectors.toList());
 				
 				
-				
-				
-				List<DatasRelatoriosParciaisOrientadorDto> relatoriosOrientador = calcularPeriodosRelatoriosOrientador(
-						inicio, termino);
+				List<DatasRelatoriosParciaisDto> relatoriosOrientador = calcularPeriodosComRelatorios(
+						inicio, termino, relatoriosEnviadosOrientador);
 
 				EstudanteDto.PeriodoEstagioDto.PeriodoEstagioDtoBuilder periodoBuilder = EstudanteDto.PeriodoEstagioDto
 						.builder()
 						.dataInicioEstagio(inicio)
 						.dataTerminoEstagio(termino)
-						.datasRelatoriosParciaisAluno(periodosAluno)
+						.datasRelatoriosParciaisAluno(relatoriosAluno)
 						.datasRelatoriosParciaisOrientador(relatoriosOrientador)
 						.dataRelatorioFinal(calcularDataRelatorioFinal(termino))
 						.empresa(nomeEmpresa)
@@ -133,7 +148,7 @@ public class EstudanteService {
 
 				EstudanteDto.PeriodoEstagioDto periodo = periodoBuilder.build();
 
-				verificarRelatoriosEnviados(nomeNormalizado, relatoriosEnviados, periodosAluno, relatoriosOrientador,
+				verificarRelatoriosEnviados(nomeNormalizado, relatoriosEnviados, relatoriosAluno, relatoriosOrientador,
 						obrigatorio ? periodo.getDataRelatorioVisita() : null,
 						obrigatorio ? periodo.getDataRelatorioFinal() : null, periodo);
 
@@ -161,16 +176,17 @@ public class EstudanteService {
 	 * @param dataRelatorioFinal
 	 */
 	private void verificarRelatoriosEnviados(String nomeEstudante, List<List<Object>> relatoriosEnviados,
-			List<DatasRelatoriosParciaisAlunoDto> relatoriosAluno,
-			List<DatasRelatoriosParciaisOrientadorDto> relatoriosOrientador, LocalDate dataRelatorioVisita,
+			List<DatasRelatoriosParciaisDto> relatoriosAluno,
+			List<DatasRelatoriosParciaisDto> relatoriosOrientador, 
+			LocalDate dataRelatorioVisita,
 			LocalDate dataRelatorioFinal, PeriodoEstagioDto periodoDto) {
 
 		for (List<Object> relatorioEnviado : relatoriosEnviados) {
 			String nomeRelatorio = relatorioEnviado.get(COL_NOME_RELATORIO).toString();
-			String nomeDecodificado = URLDecoder.decode(nomeRelatorio, StandardCharsets.UTF_8);
-			String nomeNormalizado = normalizarString(nomeDecodificado);
+			String nomeRelatorioDecodificado = URLDecoder.decode(nomeRelatorio, StandardCharsets.UTF_8);
+			String nomeRelatorioNormalizado = normalizarString(nomeRelatorioDecodificado);
 
-			if (!nomeEstudante.equalsIgnoreCase(nomeNormalizado)) {
+			if (!nomeEstudante.equalsIgnoreCase(nomeRelatorioNormalizado)) {
 				continue;
 			}
 
@@ -181,14 +197,14 @@ public class EstudanteService {
 					DATE_FORMATTER);
 
 			if (tipoRelatorio.equalsIgnoreCase("Relatório parcial do estagiário")) {
-				for (DatasRelatoriosParciaisAlunoDto relatorio : relatoriosAluno) {
+				for (DatasRelatoriosParciaisDto relatorio : relatoriosAluno) {
 					if (relatorio.getInicioPeriodoRelatorio().equals(dataInicio)
 							&& relatorio.getFimPeriodoRelatorio().equals(dataFim)) {
 						relatorio.setEnviado(true);
 					}
 				}
 			} else if (tipoRelatorio.equalsIgnoreCase("Relatório parcial do supervisor")) {
-				for (DatasRelatoriosParciaisOrientadorDto relatorio : relatoriosOrientador) {
+				for (DatasRelatoriosParciaisDto relatorio : relatoriosOrientador) {
 					if (relatorio.getInicioPeriodoRelatorio().equals(dataInicio)
 							&& relatorio.getFimPeriodoRelatorio().equals(dataFim)) {
 						relatorio.setEnviado(true);
@@ -213,12 +229,12 @@ public class EstudanteService {
 	 * @param termino
 	 * @return
 	 */
-	private List<DatasRelatoriosParciaisAlunoDto> calcularPeriodosComRelatorios(
+	private List<DatasRelatoriosParciaisDto> calcularPeriodosComRelatorios(
 		    LocalDate inicio, 
 		    LocalDate termino,
-		    List<DatasRelatoriosParciaisAlunoDto> relatoriosEnviados) {
+		    List<DatasRelatoriosParciaisDto> relatoriosEnviados) {
 		    
-		    List<DatasRelatoriosParciaisAlunoDto> periodos = new ArrayList<>();
+		    List<DatasRelatoriosParciaisDto> periodos = new ArrayList<>();
 		    LocalDate dataAtual = inicio;
 		    int indexRelatorio = 0;
 
@@ -229,7 +245,7 @@ public class EstudanteService {
 		        }
 
 		        if (indexRelatorio < relatoriosEnviados.size()) {
-		            DatasRelatoriosParciaisAlunoDto relatorio = relatoriosEnviados.get(indexRelatorio);
+		            DatasRelatoriosParciaisDto relatorio = relatoriosEnviados.get(indexRelatorio);
 		            
 		            if (!relatorio.getInicioPeriodoRelatorio().isAfter(fimPeriodo.plusDays(7))) {
 		                periodos.add(relatorio);
@@ -239,7 +255,7 @@ public class EstudanteService {
 		            }
 		        }
 
-		        periodos.add(DatasRelatoriosParciaisAlunoDto.builder()
+		        periodos.add(DatasRelatoriosParciaisDto.builder()
 		            .inicioPeriodoRelatorio(dataAtual)
 		            .fimPeriodoRelatorio(fimPeriodo)
 		            .enviado(false)
@@ -250,33 +266,6 @@ public class EstudanteService {
 
 		    return periodos;
 		}
-
-	/**
-	 * 
-	 * @param inicio
-	 * @param termino
-	 * @return
-	 */
-	private List<DatasRelatoriosParciaisOrientadorDto> calcularPeriodosRelatoriosOrientador(LocalDate inicio,
-			LocalDate termino) {
-		List<DatasRelatoriosParciaisOrientadorDto> periodos = new ArrayList<>();
-		LocalDate inicioPeriodo = inicio;
-		LocalDate fimPeriodo = inicio.plusMonths(QTDE_MES_RELATORIO_PARCIAL).minusDays(1);
-
-		while (inicioPeriodo.isBefore(termino)) {
-			if (fimPeriodo.isAfter(termino)) {
-				fimPeriodo = termino;
-			}
-
-			periodos.add(DatasRelatoriosParciaisOrientadorDto.builder().inicioPeriodoRelatorio(inicioPeriodo)
-					.fimPeriodoRelatorio(fimPeriodo).build());
-
-			inicioPeriodo = fimPeriodo.plusDays(1);
-			fimPeriodo = inicioPeriodo.plusMonths(QTDE_MES_RELATORIO_PARCIAL).minusDays(1);
-		}
-
-		return periodos;
-	}
 
 	/**
 	 * 
@@ -322,7 +311,14 @@ public class EstudanteService {
 
 	}
 
+	/**
+	 * 
+	 * @param str
+	 * @return
+	 */
 	private String normalizarString(String str) {
 		return Normalizer.normalize(str, Normalizer.Form.NFD).replaceAll("\\p{M}", "").toLowerCase();
 	}
+	
+	
 }
