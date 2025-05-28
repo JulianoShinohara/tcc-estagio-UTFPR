@@ -21,27 +21,37 @@ public class CalendarioAcademicoService {
 	    
 	    for (int i = 1; i < valores.size(); i++) {
 	        List<Object> linha = valores.get(i);
-	        System.out.print("Entrei");
 	        
-	        if (linha.size() < 5 || linha.get(0).toString().trim().isEmpty()) {
-	            continue;
-	        }
 	        
 	        try {
-	        	LocalDate inicio = LocalDate.parse(linha.get(2).toString(), DATE_FORMATTER);
+	            LocalDate inicio = LocalDate.parse(linha.get(2).toString(), DATE_FORMATTER);
 	            LocalDate fim = LocalDate.parse(linha.get(3).toString(), DATE_FORMATTER);
-	            LocalDate inicioSemestreSeguinte = LocalDate.parse(linha.get(4).toString(), DATE_FORMATTER);
 	            
-	            if (!data.isBefore(inicio) && !data.isAfter(inicioSemestreSeguinte)) {
-	                return new SemestreAcademico(
-	                    Integer.parseInt(linha.get(0).toString()),
-	                    Integer.parseInt(linha.get(1).toString()),
-	                    inicio,
-	                    fim,
-	                    LocalDate.parse(linha.get(4).toString(), DATE_FORMATTER)
-	                );
+	            if (linha.size() > 4 && !linha.get(4).toString().trim().isEmpty()) {
+	                LocalDate inicioSemestreSeguinte = LocalDate.parse(linha.get(4).toString(), DATE_FORMATTER);
+	                if (!data.isBefore(inicio) && !data.isAfter(inicioSemestreSeguinte)) {
+	                    return new SemestreAcademico(
+	                        Integer.parseInt(linha.get(0).toString()),
+	                        Integer.parseInt(linha.get(1).toString()),
+	                        inicio,
+	                        fim,
+	                        inicioSemestreSeguinte
+	                    );
+	                }
+	            } else {
+	                if (!data.isBefore(inicio) && !data.isAfter(fim)) {
+	                    return new SemestreAcademico(
+	                        Integer.parseInt(linha.get(0).toString()),
+	                        Integer.parseInt(linha.get(1).toString()),
+	                        inicio,
+	                        fim,
+	                        null
+	                    );
+	                }
 	            }
-	        } catch (Exception e) {}
+	        } catch (Exception e) {
+	            throw e;
+	        }
 	    }
 	    throw new RuntimeException("Data " + data + " não está em nenhum semestre cadastrado");
 	}

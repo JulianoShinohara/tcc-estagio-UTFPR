@@ -24,9 +24,9 @@ public class EstudanteDto {
         @JsonFormat(pattern = "dd/MM/yyyy")
         private LocalDate dataTerminoEstagio;
         
-        private List<DatasRelatoriosParciaisAlunoDto> datasRelatoriosParciaisAluno;
+        private List<DatasRelatoriosParciaisDto> datasRelatoriosParciaisAluno;
         
-        private List<DatasRelatoriosParciaisOrientadorDto> datasRelatoriosParciaisOrientador;
+        private List<DatasRelatoriosParciaisDto> datasRelatoriosParciaisOrientador;
         
         private AvaliacaoDto intervaloAvaliacao;
         

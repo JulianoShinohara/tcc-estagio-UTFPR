@@ -14,8 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.utfpr.estagio.dto.AvaliacaoDto;
-import com.utfpr.estagio.dto.DatasRelatoriosParciaisAlunoDto;
-import com.utfpr.estagio.dto.DatasRelatoriosParciaisOrientadorDto;
+import com.utfpr.estagio.dto.DatasRelatoriosParciaisDto;
 import com.utfpr.estagio.dto.EstudanteDto;
 
 @Service
@@ -35,7 +34,7 @@ public class EmailNotificationService {
 	private static final int COL_NOME = 0; // "Nome Estagiário"
 	private static final int COL_EMAIL = 1; // "Email"
 
-	@Scheduled(cron = "0 0 9 * * ?") // Executa todos os dias às 9h
+//	@Scheduled(cron = "0 0 9 * * ?") // Executa todos os dias às 9h
 	public void enviarLembretesDiarios() throws IOException {
 		LocalDate semanaSeguinte = LocalDate.now().plusDays(7);
 
@@ -52,31 +51,31 @@ public class EmailNotificationService {
 
 				for (EstudanteDto.PeriodoEstagioDto periodo : estudanteDto.getPeriodosEstagio()) {
 					// relatórios parciais do aluno
-					for (DatasRelatoriosParciaisAlunoDto relatorio : periodo
+					for (DatasRelatoriosParciaisDto relatorio : periodo
 							.getDatasRelatoriosParciaisAluno()) {
-						if (relatorio.getFimPeriodoRelatorio().equals(LocalDate.now().plusDays(7)) && !relatorio.isEnviado()) {
+						if (relatorio.getFimPeriodoRelatorio().equals(semanaSeguinte) && !relatorio.isEnviado()) {
 							enviarEmailRelatorioParcial(email, nome, relatorio.getFimPeriodoRelatorio(), "aluno");
 						}
 					}
 
 					// relatórios parciais do orientador
-					for (DatasRelatoriosParciaisOrientadorDto relatorio : periodo
+					for (DatasRelatoriosParciaisDto relatorio : periodo
 							.getDatasRelatoriosParciaisOrientador()) {
-						if (relatorio.getFimPeriodoRelatorio().equals(LocalDate.now().plusDays(7)) && !relatorio.isEnviado()) {
+						if (relatorio.getFimPeriodoRelatorio().equals(semanaSeguinte) && !relatorio.isEnviado()) {
 							enviarEmailRelatorioParcial(email, nome, relatorio.getFimPeriodoRelatorio(), "orientador");
 						}
 					}
 
 					// relatório de visita
 					if (periodo.getObrigatorio() && periodo.getDataRelatorioVisita() != null
-							&& periodo.getDataRelatorioVisita().equals(LocalDate.now().plusDays(7))
+							&& periodo.getDataRelatorioVisita().equals(semanaSeguinte)
 							&& !periodo.isEnviadoRelatorioVisita()) {
 						enviarEmailRelatorioVisita(email, nome, periodo.getDataRelatorioVisita());
 					}
 
 					// relatório final
 					if (periodo.getDataRelatorioFinal() != null
-							&& periodo.getDataRelatorioFinal().equals(LocalDate.now().plusDays(7))
+							&& periodo.getDataRelatorioFinal().equals(semanaSeguinte)
 							&& !periodo.isEnviadoRelatorioFinal()) {
 						enviarEmailRelatorioFinal(email, nome, periodo.getDataRelatorioFinal());
 					}
