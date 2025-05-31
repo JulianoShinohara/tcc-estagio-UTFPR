@@ -42,11 +42,11 @@
       <div class="periodo-info">
         <p>
           <strong>Início:</strong>
-          {{ periodo.dataInicioEstagio | date : "dd/MM/yyyy" }}
+          {{ periodo.dataInicioEstagio}}
         </p>
         <p>
           <strong>Término:</strong>
-          {{ periodo.dataTerminoEstagio | date : "dd/MM/yyyy" }}
+          {{ periodo.dataTerminoEstagio}}
         </p>
       </div>
 
@@ -58,8 +58,8 @@
         >
           <p>
             Período:
-            {{ relatorio.inicioPeriodoRelatorio | date : "dd/MM/yyyy" }} até
-            {{ relatorio.fimPeriodoRelatorio | date : "dd/MM/yyyy" }}
+            {{ relatorio.inicioPeriodoRelatorio}} até
+            {{ relatorio.fimPeriodoRelatorio}}
             <span class="status" [class.enviado]="relatorio.enviado">
               {{ relatorio.enviado ? "✓ Enviado" : "✗ Pendente" }}
             </span>
@@ -75,8 +75,8 @@
         >
           <p>
             Período:
-            {{ relatorio.inicioPeriodoRelatorio | date : "dd/MM/yyyy" }} até
-            {{ relatorio.fimPeriodoRelatorio | date : "dd/MM/yyyy" }}
+            {{ relatorio.inicioPeriodoRelatorio}} até
+            {{ relatorio.fimPeriodoRelatorio}}
             <span class="status" [class.enviado]="relatorio.enviado">
               {{ relatorio.enviado ? "✓ Enviado" : "✗ Pendente" }}
             </span>
@@ -84,10 +84,10 @@
         </div>
       </div>
 
-      <div *ngIf="periodoPossuiVisita(periodo)" class="relatorio-visita">
+      <div *ngIf="periodo.dataRelatorioVisita" class="relatorio-visita">
         <h4>Relatório de Visita</h4>
         <p>
-          Data limite: {{ periodo.dataRelatorioVisita | date : "dd/MM/yyyy" }}
+          Data limite: {{ periodo.dataRelatorioVisita}}
           <span class="status" [class.enviado]="periodo.enviadoRelatorioVisita">
             {{ periodo.enviadoRelatorioVisita ? "✓ Enviado" : "✗ Pendente" }}
           </span>
@@ -97,7 +97,7 @@
       <div class="relatorio-final">
         <h4>Relatório Final</h4>
         <p>
-          Data limite: {{ periodo.dataRelatorioFinal | date : "dd/MM/yyyy" }}
+          Data limite: {{ periodo.dataRelatorioFinal}}
           <span class="status" [class.enviado]="periodo.enviadoRelatorioFinal">
             {{ periodo.enviadoRelatorioFinal ? "✓ Enviado" : "✗ Pendente" }}
           </span>
@@ -108,9 +108,9 @@
         <h4>Avaliação de Estágio</h4>
         <p>
           Período:
-          {{ periodo.intervaloAvaliacao.dataInicio | date : "dd/MM/yyyy" }}
+          {{ periodo.intervaloAvaliacao.dataInicio}}
           até
-          {{ periodo.intervaloAvaliacao.dataFim | date : "dd/MM/yyyy" }}
+          {{ periodo.intervaloAvaliacao.dataFim}}
         </p>
       </div>
     </div>

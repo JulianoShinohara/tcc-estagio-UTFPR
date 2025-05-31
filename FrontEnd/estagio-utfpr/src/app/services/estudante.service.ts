@@ -15,12 +15,10 @@ export class EstudanteService {
   buscarEstagioPorNome(nome: string): Observable<EstudanteDto> {
 
     const nomeDecodificado = decodeURIComponent(nome);
-    console.log(nomeDecodificado);
 
     return this.http.get<EstudanteDto>(`${this.apiUrl}/estudante/${encodeURIComponent(nomeDecodificado)}`)
     .pipe(
       catchError(error => {
-        console.error('Erro na requisição:', error);
         throw new Error('Falha ao buscar estudante. Tente novamente.');
       })
     );
