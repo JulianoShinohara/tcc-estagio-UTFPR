@@ -74,6 +74,7 @@ public class EstudanteService {
 
 		List<List<Object>> valoresSemCabecalho = valores.subList(1, valores.size());
 		for (List<Object> linha : valoresSemCabecalho) {
+			
 			if (nomeNormalizado.equalsIgnoreCase(normalizarString(linha.get(COL_NOME).toString()))) {
 
 				LocalDate inicio = LocalDate.parse(linha.get(COL_INICIO).toString(), DATE_FORMATTER);
