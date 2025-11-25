@@ -76,11 +76,6 @@ npm install
 ng serve
 ```
 
-Ou use:
-```bash
-npm start
-```
-
 A aplicação estará disponível em `http://localhost:4200`
 
 ## Configuração de Email
