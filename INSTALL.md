@@ -43,9 +43,6 @@ spring.mail.password=sua_senha_app
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
 spring.mail.properties.mail.smtp.starttls.required=true
-
-# Google Sheets API (se necessário)
-GOOGLE_APPLICATION_CREDENTIALS=caminho/para/seu/arquivo.json
 ```
 
 ### 4. Compile o projeto
@@ -74,17 +71,6 @@ cd FrontEnd/estagio-utfpr
 npm install
 ```
 
-### 3. Configure o servidor backend
-
-Edite o arquivo `src/environments/environment.ts`:
-
-```typescript
-export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:8080/api'
-};
-```
-
 ### 4. Execute o servidor de desenvolvimento
 ```bash
 ng serve
@@ -96,25 +82,6 @@ npm start
 ```
 
 A aplicação estará disponível em `http://localhost:4200`
-
-
-## Configuração de Tarefas Agendadas
-
-O sistema possui duas tarefas agendadas que executam **todos os dias às 9:00 AM** (horário de Brasília):
-
-### 1. Download Automático de Planilhas
-- **Classe**: `ScheduledTaskService.executarDownloadPlanilhasDiariamente()`
-- **Função**: Baixa todas as planilhas do Google Sheets
-- **Horário**: 09:00:00 (cron: `0 0 9 * * *`)
-
-### 2. Envio de Lembretes por Email
-- **Classe**: `ScheduledTaskService.executarEnvioLembretesDiariamente()`
-- **Função**: Envia lembretes de relatórios pendentes
-- **Horário**: 09:00:00 (cron: `0 0 9 * * *`)
-
-Para alterar o horário, edite `src/main/java/com/utfpr/estagio/service/ScheduledTaskService.java` e modifique o atributo `cron` das anotações `@Scheduled`.
-
----
 
 ## Configuração de Email
 
