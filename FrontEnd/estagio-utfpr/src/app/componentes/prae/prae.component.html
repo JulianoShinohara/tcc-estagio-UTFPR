@@ -1,0 +1,805 @@
+<div class="prae-container">
+  <div class="content-wrapper">
+    <h1 class="page-title">Gestão PRAE</h1>
+    
+    <p-tabView styleClass="custom-tabview" (onChange)="onTabChange($event)">
+      <!-- Tab 1: Estatísticas de Orientadores -->
+      <p-tabPanel header="Orientação por Semestre">
+        <div class="tab-content">
+          <h2>Estatísticas de Orientação por Semestre</h2>
+
+          <!-- Loading -->
+          <div *ngIf="isLoading" class="loading-container">
+            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+            <p>Carregando dados...</p>
+          </div>
+
+          <!-- Error Message -->
+          <div *ngIf="errorMessage && !isLoading" class="error-message">
+            <i class="pi pi-exclamation-triangle"></i>
+            {{ errorMessage }}
+          </div>
+
+          <!-- Seção do Gráfico com Filtros -->
+          <div *ngIf="estatisticasOrientadores && estatisticasOrientadores.length > 0 && !isLoading">
+
+            <!-- Filtros -->
+            <div class="filters-section">
+              <!-- Filtro de Período -->
+              <div class="filter-row">
+                <div class="filter-group-inline">
+                  <label for="semestreInicial">De:</label>
+                  <p-dropdown
+                    id="semestreInicial"
+                    [ngModel]="semestreInicial"
+                    [options]="listaSemestres"
+                    optionLabel="label"
+                    optionValue="value"
+                    (onChange)="onSemestreInicialChange($event)"
+                    placeholder="Selecione"
+                    [showClear]="false"
+                    [style]="{'width': '150px'}"
+                  ></p-dropdown>
+                </div>
+
+                <div class="filter-group-inline">
+                  <label for="semestreFinal">Até:</label>
+                  <p-dropdown
+                    id="semestreFinal"
+                    [ngModel]="semestreFinal"
+                    [options]="listaSemestres"
+                    optionLabel="label"
+                    optionValue="value"
+                    (onChange)="onSemestreFinalChange($event)"
+                    placeholder="Selecione"
+                    [showClear]="false"
+                    [style]="{'width': '150px'}"
+                  ></p-dropdown>
+                </div>
+
+                <div class="filter-actions-inline">
+                  <button pButton type="button"
+                    label="Filtrar Orientadores ({{ orientadoresSelecionados.length }} selecionados)"
+                    icon="pi pi-filter"
+                    (click)="displayOrientadoresDialog = true"
+                    class="p-button-sm"></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Modal para selecionar orientadores -->
+            <p-dialog
+              header="Selecionar Orientadores"
+              [(visible)]="displayOrientadoresDialog"
+              [modal]="true"
+              [style]="{width: '50vw'}"
+              [draggable]="false"
+              [resizable]="false">
+
+              <div class="orientadores-dialog-content">
+                <!-- Busca -->
+                <div class="search-container">
+                  <input
+                    type="text"
+                    [(ngModel)]="buscaOrientador"
+                    placeholder="Buscar orientador..."
+                    class="search-input"
+                  />
+                </div>
+
+                <!-- Botões de ação -->
+                <div class="dialog-actions">
+                  <button pButton type="button" label="Selecionar Todos" icon="pi pi-check-circle"
+                    (click)="selectAll()" class="p-button-sm p-button-outlined"></button>
+                  <button pButton type="button" label="Limpar Seleção" icon="pi pi-times"
+                    (click)="clearSelection()" class="p-button-sm p-button-outlined p-button-danger"></button>
+                </div>
+
+                <!-- Lista de orientadores -->
+                <div class="orientadores-list">
+                  <div
+                    *ngFor="let orientador of listaOrientadoresFiltrados"
+                    class="orientador-item"
+                    [class.selected]="isOrientadorSelecionado(orientador.value)"
+                    (click)="toggleOrientador(orientador.value)"
+                  >
+                    <input
+                      type="checkbox"
+                      [checked]="isOrientadorSelecionado(orientador.value)"
+                      (click)="$event.stopPropagation()"
+                      (change)="toggleOrientador(orientador.value)"
+                    />
+                    <span class="orientador-nome">{{ orientador.label }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <ng-template pTemplate="footer">
+                <button pButton type="button" label="Aplicar" icon="pi pi-check"
+                  (click)="displayOrientadoresDialog = false" class="p-button-sm"></button>
+              </ng-template>
+            </p-dialog>
+
+            <!-- Tabela de Estágios Obrigatórios -->
+            <div *ngIf="tabelaObrigatorios.length > 0" class="table-container">
+              <h3 class="titulo-obrigatorios" style="margin-bottom: 15px;">Estágios Obrigatórios</h3>
+              <p-table
+                [value]="tabelaObrigatorios"
+                [style]="{'font-size': '13px'}"
+                styleClass="p-datatable-sm p-datatable-striped tabela-completa"
+                responsiveLayout="scroll">
+
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th [style]="{'text-align': 'left', 'width': '200px'}">
+                      Orientador
+                    </th>
+                    <th *ngFor="let col of colunasObrigatorios.slice(1)"
+                        [style]="{'text-align': 'center', 'white-space': 'nowrap'}">
+                      {{ col.header }}
+                    </th>
+                  </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-rowData>
+                  <tr>
+                    <td [style]="{'font-weight': '600', 'color': '#071D41', 'width': '200px'}">
+                      {{ rowData.orientador }}
+                    </td>
+                    <td *ngFor="let col of colunasObrigatorios.slice(1)"
+                        [style]="{'text-align': 'center'}">
+                      <span *ngIf="rowData[col.field] > 0"
+                            class="badge badge-obrigatorio">
+                        {{ rowData[col.field] }}
+                      </span>
+                      <span *ngIf="rowData[col.field] === 0">
+                        {{ rowData[col.field] }}
+                      </span>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+
+            <!-- Tabela de Estágios Não Obrigatórios -->
+            <div *ngIf="tabelaNaoObrigatorios.length > 0" class="table-container">
+              <h3 class="titulo-nao-obrigatorios" style="margin-bottom: 15px;">Estágios Não Obrigatórios</h3>
+              <p-table
+                [value]="tabelaNaoObrigatorios"
+                [style]="{'font-size': '13px'}"
+                styleClass="p-datatable-sm p-datatable-striped tabela-completa"
+                responsiveLayout="scroll">
+
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th [style]="{'text-align': 'left', 'width': '200px'}">
+                      Orientador
+                    </th>
+                    <th *ngFor="let col of colunasNaoObrigatorios.slice(1)"
+                        [style]="{'text-align': 'center', 'white-space': 'nowrap'}">
+                      {{ col.header }}
+                    </th>
+                  </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-rowData>
+                  <tr>
+                    <td [style]="{'font-weight': '600', 'color': '#071D41', 'width': '200px'}">
+                      {{ rowData.orientador }}
+                    </td>
+                    <td *ngFor="let col of colunasNaoObrigatorios.slice(1)"
+                        [style]="{'text-align': 'center'}">
+                      <span *ngIf="rowData[col.field] > 0"
+                            class="badge badge-nao-obrigatorio">
+                        {{ rowData[col.field] }}
+                      </span>
+                      <span *ngIf="rowData[col.field] === 0">
+                        {{ rowData[col.field] }}
+                      </span>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+
+            <!-- Gráfico de Estágios Obrigatórios -->
+            <div *ngIf="chartDataObrigatorios" class="chart-container">
+              <p-chart
+                type="line"
+                [data]="chartDataObrigatorios"
+                [options]="chartOptionsObrigatorios"
+                width="100%"
+                height="400px"
+              ></p-chart>
+            </div>
+
+            <!-- Gráfico de Estágios Não Obrigatórios -->
+            <div *ngIf="chartDataNaoObrigatorios" class="chart-container">
+              <p-chart
+                type="line"
+                [data]="chartDataNaoObrigatorios"
+                [options]="chartOptionsNaoObrigatorios"
+                width="100%"
+                height="400px"
+              ></p-chart>
+            </div>
+
+            <!-- No Data -->
+            <div *ngIf="tabelaObrigatorios.length === 0 && tabelaNaoObrigatorios.length === 0" class="no-data">
+              <i class="pi pi-info-circle"></i>
+              <p>Selecione pelo menos um orientador para visualizar as tabelas.</p>
+            </div>
+          </div>
+
+        </div>
+      </p-tabPanel>
+
+      <!-- Tab 2: Tipos de Estágios -->
+      <p-tabPanel header="Tipos de Estágios">
+        <div class="tab-content">
+          <h2>Tipos de Estágios por Semestre</h2>
+
+          <!-- Loading -->
+          <div *ngIf="isLoadingTiposEstagios" class="loading-container">
+            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+            <p>Carregando dados...</p>
+          </div>
+
+          <!-- Conteúdo -->
+          <div *ngIf="!isLoadingTiposEstagios">
+
+            <!-- Filtros de Período -->
+            <div class="filters-section" *ngIf="tiposEstagiosPorSemestre.length > 0">
+              <div class="filter-row">
+                <div class="filter-group-inline">
+                  <label for="semestreInicialTab2">De:</label>
+                  <p-dropdown
+                    id="semestreInicialTab2"
+                    [ngModel]="semestreInicial"
+                    [options]="listaSemestres"
+                    optionLabel="label"
+                    optionValue="value"
+                    (onChange)="onSemestreInicialChange($event)"
+                    placeholder="Selecione"
+                    [showClear]="false"
+                    [style]="{'width': '150px'}"
+                  ></p-dropdown>
+                </div>
+
+                <div class="filter-group-inline">
+                  <label for="semestreFinalTab2">Até:</label>
+                  <p-dropdown
+                    id="semestreFinalTab2"
+                    [ngModel]="semestreFinal"
+                    [options]="listaSemestres"
+                    optionLabel="label"
+                    optionValue="value"
+                    (onChange)="onSemestreFinalChange($event)"
+                    placeholder="Selecione"
+                    [showClear]="false"
+                    [style]="{'width': '150px'}"
+                  ></p-dropdown>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chart -->
+            <div *ngIf="chartDataTiposEstagios" class="chart-container">
+              <p-chart
+                type="bar"
+                [data]="chartDataTiposEstagios"
+                [options]="chartOptionsTiposEstagios"
+                width="100%"
+                height="400px"
+              ></p-chart>
+            </div>
+
+            <!-- No Data -->
+            <div *ngIf="!chartDataTiposEstagios" class="no-data">
+              <i class="pi pi-info-circle"></i>
+              <p>Nenhum dado disponível para exibir.</p>
+            </div>
+          </div>
+        </div>
+      </p-tabPanel>
+
+      <!-- Tab 3: Estágios por Mês -->
+      <p-tabPanel header="Estágios por Mês">
+        <div class="tab-content">
+          <h2>Estágios Iniciados e Finalizados por Mês</h2>
+
+          <!-- Loading -->
+          <div *ngIf="isLoadingEstagiosPorMes" class="loading-container">
+            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+            <p>Carregando dados...</p>
+          </div>
+
+          <!-- Conteúdo -->
+          <div *ngIf="!isLoadingEstagiosPorMes">
+
+            <!-- Filtros de Período -->
+            <div *ngIf="estadoEstagiosPorMes.length > 0" class="filters-section">
+              <div class="filter-row">
+                <!-- Mês Inicial -->
+                <div class="filter-group-inline">
+                  <label for="mesInicial">De (Mês):</label>
+                  <p-dropdown
+                    id="mesInicial"
+                    [(ngModel)]="mesInicial"
+                    [options]="[
+                      {label: 'Janeiro', value: 1},
+                      {label: 'Fevereiro', value: 2},
+                      {label: 'Março', value: 3},
+                      {label: 'Abril', value: 4},
+                      {label: 'Maio', value: 5},
+                      {label: 'Junho', value: 6},
+                      {label: 'Julho', value: 7},
+                      {label: 'Agosto', value: 8},
+                      {label: 'Setembro', value: 9},
+                      {label: 'Outubro', value: 10},
+                      {label: 'Novembro', value: 11},
+                      {label: 'Dezembro', value: 12}
+                    ]"
+                    optionLabel="label"
+                    optionValue="value"
+                    (onChange)="applyFiltroEstagiosPorMes()"
+                    placeholder="Selecione"
+                    [showClear]="false"
+                    [style]="{'width': '150px'}"
+                  ></p-dropdown>
+                </div>
+
+                <!-- Ano Inicial -->
+                <div class="filter-group-inline">
+                  <label for="anoInicial">Ano:</label>
+                  <p-dropdown
+                    id="anoInicial"
+                    [(ngModel)]="anoInicial"
+                    [options]="listaAnosMeses"
+                    optionLabel="label"
+                    optionValue="value"
+                    (onChange)="applyFiltroEstagiosPorMes()"
+                    placeholder="Selecione"
+                    [showClear]="false"
+                    [style]="{'width': '120px'}"
+                  ></p-dropdown>
+                </div>
+
+                <!-- Separador -->
+                <div style="margin: 0 10px; color: #071D41; font-weight: bold;">até</div>
+
+                <!-- Mês Final -->
+                <div class="filter-group-inline">
+                  <label for="mesFinal">Até (Mês):</label>
+                  <p-dropdown
+                    id="mesFinal"
+                    [(ngModel)]="mesFinal"
+                    [options]="[
+                      {label: 'Janeiro', value: 1},
+                      {label: 'Fevereiro', value: 2},
+                      {label: 'Março', value: 3},
+                      {label: 'Abril', value: 4},
+                      {label: 'Maio', value: 5},
+                      {label: 'Junho', value: 6},
+                      {label: 'Julho', value: 7},
+                      {label: 'Agosto', value: 8},
+                      {label: 'Setembro', value: 9},
+                      {label: 'Outubro', value: 10},
+                      {label: 'Novembro', value: 11},
+                      {label: 'Dezembro', value: 12}
+                    ]"
+                    optionLabel="label"
+                    optionValue="value"
+                    (onChange)="applyFiltroEstagiosPorMes()"
+                    placeholder="Selecione"
+                    [showClear]="false"
+                    [style]="{'width': '150px'}"
+                  ></p-dropdown>
+                </div>
+
+                <!-- Ano Final -->
+                <div class="filter-group-inline">
+                  <label for="anoFinal">Ano:</label>
+                  <p-dropdown
+                    id="anoFinal"
+                    [(ngModel)]="anoFinal"
+                    [options]="listaAnosMeses"
+                    optionLabel="label"
+                    optionValue="value"
+                    (onChange)="applyFiltroEstagiosPorMes()"
+                    placeholder="Selecione"
+                    [showClear]="false"
+                    [style]="{'width': '120px'}"
+                  ></p-dropdown>
+                </div>
+              </div>
+            </div>
+
+            <!-- Charts Side by Side -->
+            <div *ngIf="chartDataEstagiosPorMesObrigatorio || chartDataEstagiosPorMesNaoObrigatorio" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px;">
+
+              <!-- Chart Estágios Obrigatórios -->
+              <div *ngIf="chartDataEstagiosPorMesObrigatorio" class="chart-container">
+                <h3 style="margin-bottom: 15px; color: #dc3545; font-size: 16px; font-weight: 600;">Estágios Obrigatórios</h3>
+                <p-chart
+                  type="line"
+                  [data]="chartDataEstagiosPorMesObrigatorio"
+                  [options]="chartOptionsEstagiosPorMesObrigatorio"
+                  width="100%"
+                  height="350px"
+                ></p-chart>
+              </div>
+
+              <!-- Chart Estágios Não Obrigatórios -->
+              <div *ngIf="chartDataEstagiosPorMesNaoObrigatorio" class="chart-container">
+                <h3 style="margin-bottom: 15px; color: #28a745; font-size: 16px; font-weight: 600;">Estágios Não Obrigatórios</h3>
+                <p-chart
+                  type="line"
+                  [data]="chartDataEstagiosPorMesNaoObrigatorio"
+                  [options]="chartOptionsEstagiosPorMesNaoObrigatorio"
+                  width="100%"
+                  height="350px"
+                ></p-chart>
+              </div>
+            </div>
+
+            <!-- No Data -->
+            <div *ngIf="!chartDataEstagiosPorMesObrigatorio && !chartDataEstagiosPorMesNaoObrigatorio" class="no-data">
+              <i class="pi pi-info-circle"></i>
+              <p>Nenhum dado disponível para exibir.</p>
+            </div>
+          </div>
+        </div>
+      </p-tabPanel>
+
+      <!-- Tab 4: Supervisores por Empresa -->
+      <p-tabPanel header="Supervisores">
+        <div class="tab-content">
+          <h2>Supervisores por Empresa</h2>
+
+          <!-- Loading -->
+          <div *ngIf="isLoadingSupervisores" class="loading-container">
+            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+            <p>Carregando supervisores...</p>
+          </div>
+
+          <!-- Error Message -->
+          <div *ngIf="errorMessageSupervisores && !isLoadingSupervisores" class="error-message">
+            <i class="pi pi-exclamation-triangle"></i>
+            {{ errorMessageSupervisores }}
+          </div>
+
+          <!-- Filtros -->
+          <div *ngIf="empresasComSupervisores && empresasComSupervisores.length > 0 && !isLoadingSupervisores" class="filters-section">
+            <div class="filter-row">
+              <div class="filter-group-inline">
+                <label for="empresaFilter">Empresa:</label>
+                <p-dropdown
+                  id="empresaFilter"
+                  [(ngModel)]="empresaFiltro"
+                  [options]="listaEmpresas"
+                  optionLabel="label"
+                  optionValue="value"
+                  (onChange)="aplicarFiltrosSupervisores()"
+                  placeholder="Todas"
+                  [showClear]="true"
+                  [filter]="true"
+                  filterBy="label"
+                  [style]="{'width': '250px'}"
+                ></p-dropdown>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabela de Empresas com Expansão de Supervisores -->
+          <div *ngIf="empresasComSupervisoresFiltradas && empresasComSupervisoresFiltradas.length > 0 && !isLoadingSupervisores" class="table-container">
+            <p-table [value]="empresasComSupervisoresFiltradas"
+                     [expandedRowKeys]="expandedRows"
+                     [rowsPerPageOptions]="[10, 20, 50]"
+                     [paginator]="true"
+                     [rows]="10"
+                     styleClass="p-datatable-striped"
+                     dataKey="nomeEmpresa">
+
+              <!-- Cabeçalho da Tabela -->
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width: 3rem"></th>
+                  <th>Empresa</th>
+                  <th style="text-align: center">Valor Médio Bolsa</th>
+                  <th style="text-align: center">Valor Médio Benefício</th>
+                  <th style="text-align: center">Obrigatórios</th>
+                  <th style="text-align: center">Não Obrigatórios</th>
+                </tr>
+              </ng-template>
+
+              <!-- Linha Principal da Empresa -->
+              <ng-template pTemplate="body" let-rowData>
+                <tr>
+                  <td>
+                    <button
+                      type="button"
+                      pButton
+                      pRipple
+                      [pRowToggler]="rowData"
+                      class="p-button-text p-button-rounded p-button-plain"
+                      [icon]="expandedRows[rowData.nomeEmpresa] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
+                    </button>
+                  </td>
+                  <td [style]="{'font-weight': '600', 'color': '#071D41'}">{{ rowData.nomeEmpresa }}</td>
+                  <td style="text-align: center">{{ rowData.valorMedioBolsa | currency:'BRL' }}</td>
+                  <td style="text-align: center">{{ rowData.valorMedioBeneficio | currency:'BRL' }}</td>
+                  <td style="text-align: center">{{ rowData.quantidadeObrigatorios }}</td>
+                  <td style="text-align: center">{{ rowData.quantidadeNaoObrigatorios }}</td>
+                </tr>
+              </ng-template>
+
+              <!-- Linha Expandida com Lista de Supervisores -->
+              <ng-template pTemplate="rowexpansion" let-rowData>
+                <tr>
+                  <td colspan="6" [style]="{'background-color': '#f5f5f5', 'padding': '0'}">
+                    <div [style]="{'padding': '20px'}">
+                      <p-table [value]="rowData.supervisores" styleClass="p-datatable-sm">
+                        <ng-template pTemplate="header">
+                          <tr>
+                            <th>Supervisor</th>
+                            <th style="text-align: center">Quantidade de Estágios</th>
+                          </tr>
+                        </ng-template>
+                        <ng-template pTemplate="body" let-supervisor>
+                          <tr>
+                            <td>{{ supervisor.nomeSupervisor }}</td>
+                            <td style="text-align: center">{{ supervisor.quantidadeEstagios }}</td>
+                          </tr>
+                        </ng-template>
+                      </p-table>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+
+          <!-- Gráfico de Empresas por Quantidade de Estágios -->
+          <div *ngIf="chartDataEmpresasEstagios && !isLoadingSupervisores" class="chart-container" style="margin-top: 40px; margin-bottom: 40px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <h3 style="margin: 0; color: #2c3e50; font-size: 18px;">Quantidade de Estágios por Empresa</h3>
+            </div>
+
+            <!-- Filtros do Gráfico -->
+            <div class="filters-section" style="margin-bottom: 20px;">
+              <!-- Primeira linha de filtros -->
+              <div class="filter-row">
+                <div class="filter-group-inline">
+                  <label for="filtroEmpresasGrafico" style="margin-right: 8px;">Filtrar Empresa:</label>
+                  <input
+                    id="filtroEmpresasGrafico"
+                    type="text"
+                    [(ngModel)]="filtroGraficoEmpresas"
+                    (ngModelChange)="aplicarFiltroGraficoEmpresas()"
+                    placeholder="Digite o nome da empresa..."
+                    style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; width: 250px;">
+                </div>
+
+                <div class="filter-group-inline" style="margin-left: 20px;">
+                  <p-button
+                    [label]="mostrarTop10Empresas ? 'Mostrando Top 10' : 'Mostrando Todas'"
+                    icon="pi pi-list"
+                    (onClick)="toggleTop10Empresas()"
+                    [styleClass]="'p-button-sm'"
+                    [style]="{'background-color': mostrarTop10Empresas ? '#3498db' : '#95a5a6', 'border': 'none', 'color': '#fff', 'font-weight': '600'}">
+                  </p-button>
+                </div>
+              </div>
+
+              <!-- Segunda linha de filtros - Semestres -->
+              <div class="filter-row" style="margin-top: 15px;">
+                <div class="filter-group-inline">
+                  <label for="semestreGraficoInicial" style="margin-right: 8px;">De (Semestre):</label>
+                  <p-dropdown
+                    id="semestreGraficoInicial"
+                    [(ngModel)]="semestreGraficoInicial"
+                    [options]="listaSemestresGrafico"
+                    optionLabel="label"
+                    optionValue="value"
+                    (onChange)="aplicarFiltroSemestreGrafico()"
+                    placeholder="Selecione"
+                    [showClear]="false"
+                    [style]="{'width': '180px'}"
+                  ></p-dropdown>
+                </div>
+
+                <div style="margin: 0 10px; color: #071D41; font-weight: bold;">até</div>
+
+                <div class="filter-group-inline">
+                  <label for="semestreGraficoFinal" style="margin-right: 8px;">Até (Semestre):</label>
+                  <p-dropdown
+                    id="semestreGraficoFinal"
+                    [(ngModel)]="semestreGraficoFinal"
+                    [options]="listaSemestresGrafico"
+                    optionLabel="label"
+                    optionValue="value"
+                    (onChange)="aplicarFiltroSemestreGrafico()"
+                    placeholder="Selecione"
+                    [showClear]="false"
+                    [style]="{'width': '180px'}"
+                  ></p-dropdown>
+                </div>
+              </div>
+            </div>
+
+            <p-chart type="bar" [data]="chartDataEmpresasEstagios" [options]="chartOptionsEmpresasEstagios" [style]="{'height': '500px'}"></p-chart>
+          </div>
+
+          <!-- Mensagem Sem Dados (Filtros Aplicados) -->
+          <div *ngIf="(empresasComSupervisoresFiltradas == null || empresasComSupervisoresFiltradas.length === 0) && !isLoadingSupervisores && empresasComSupervisores && empresasComSupervisores.length > 0" class="no-data">
+            <i class="pi pi-info-circle"></i>
+            <p>Nenhum supervisor encontrado com os filtros aplicados.</p>
+          </div>
+
+          <!-- Mensagem Sem Dados (Nenhum Supervisor Disponível) -->
+          <div *ngIf="!empresasComSupervisores || empresasComSupervisores.length === 0 && !isLoadingSupervisores && !errorMessageSupervisores" class="no-data">
+            <i class="pi pi-info-circle"></i>
+            <p>Nenhum supervisor disponível.</p>
+          </div>
+        </div>
+      </p-tabPanel>
+
+      <!-- Tab 5: Tempo de Realização de Estágios -->
+      <p-tabPanel header="Tempo de Estágio">
+        <div class="tab-content">
+          <h2>Duração dos Estágios - Análise Estatística</h2>
+
+          <!-- Loading -->
+          <div *ngIf="isLoadingDuracao" class="loading-container">
+            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+            <p>Carregando estatísticas de duração...</p>
+          </div>
+
+          <!-- Error Message -->
+          <div *ngIf="errorMessageDuracao && !isLoadingDuracao" class="error-message">
+            <i class="pi pi-exclamation-triangle"></i>
+            {{ errorMessageDuracao }}
+          </div>
+
+          <!-- Filtro de Tipo de Estágio (Multi-select Melhorado) -->
+          <div *ngIf="estatisticasDuracaoPorTipoEstagio && !isLoadingDuracao"
+               style="margin-bottom: 40px; padding: 25px; background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+                      border: 2px solid #e8ecf1; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+
+            <!-- Título e descrição do filtro -->
+            <div style="margin-bottom: 18px;">
+              <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: 700;">
+                <i class="pi pi-filter" style="margin-right: 8px; color: #7db4d1;"></i>Filtrar por Tipo de Estágio
+              </h4>
+              <p style="margin: 0; color: #666; font-size: 13px;">Selecione um ou mais tipos para visualizar estatísticas agregadas</p>
+            </div>
+
+            <!-- Multi-select com estilo aprimorado -->
+            <div style="display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap;">
+              <p-multiSelect
+                #tiposEstagioSelect
+                [(ngModel)]="tiposEstagio"
+                [options]="listaTiposEstagio"
+                optionLabel="label"
+                optionValue="value"
+                (onChange)="atualizarGraficosPorTipo()"
+                [style]="{'width': '100%', 'max-width': '500px'}"
+                styleClass="w-full filter-multiselect"
+                placeholder="Selecione tipos de estágio..."
+                [showToggleAll]="true"
+                [filter]="false"
+                [maxSelectedLabels]="3"
+                [selectedItemsLabel]="tiposEstagio.length + ' selecionado(s)'">
+              </p-multiSelect>
+
+              <!-- Botão para limpar filtro -->
+              <button
+                *ngIf="tiposEstagio.length > 0"
+                type="button"
+                (click)="limparFiltroTiposEstagio()"
+                class="btn-filtro btn-limpar">
+                <i class="pi pi-times" style="margin-right: 6px;"></i>Limpar Tudo
+              </button>
+
+              <!-- Botão para selecionar todos -->
+              <button
+                *ngIf="tiposEstagio.length < listaTiposEstagio.length"
+                type="button"
+                (click)="selecionarTodosTiposEstagio()"
+                class="btn-filtro btn-selecionar">
+                <i class="pi pi-check-circle" style="margin-right: 6px;"></i>Selecionar Todos
+              </button>
+            </div>
+
+            <!-- Indicador de seleção -->
+            <div *ngIf="tiposEstagio.length > 0"
+                 style="margin-top: 14px; padding: 10px 12px; background-color: #f0f8fc; border-left: 4px solid #7db4d1;
+                        border-radius: 4px;">
+              <p style="margin: 0; color: #4a8ca8; font-size: 12px; font-weight: 500;">
+                <i class="pi pi-check" style="margin-right: 6px;"></i>
+                Selecionados: {{ tiposEstagio.join(', ') }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Estatísticas em Tabela -->
+          <div *ngIf="estatisticasCurrentes && !isLoadingDuracao" class="table-container">
+            <h3 style="margin-bottom: 15px;">Resumo Estatístico</h3>
+            <p-table
+              [value]="[
+                {metrica: 'Duração Média', obrigatorio: ((estatisticasCurrentes.obrigatorios?.duracaoMedia || 0) | number:'1.0-0') + ' dias', naoObrigatorio: ((estatisticasCurrentes.naoObrigatorios?.duracaoMedia || 0) | number:'1.0-0') + ' dias'},
+                {metrica: 'Duração Mínima', obrigatorio: (estatisticasCurrentes.obrigatorios?.duracaoMinima || 0) + ' dias', naoObrigatorio: (estatisticasCurrentes.naoObrigatorios?.duracaoMinima || 0) + ' dias'},
+                {metrica: 'Duração Máxima', obrigatorio: (estatisticasCurrentes.obrigatorios?.duracaoMaxima || 0) + ' dias', naoObrigatorio: (estatisticasCurrentes.naoObrigatorios?.duracaoMaxima || 0) + ' dias'},
+                {metrica: '1º Quartil (Q1)', obrigatorio: (estatisticasCurrentes.obrigatorios?.primeiroQuartil || 0) + ' dias', naoObrigatorio: (estatisticasCurrentes.naoObrigatorios?.primeiroQuartil || 0) + ' dias'},
+                {metrica: 'Mediana (Q2)', obrigatorio: (estatisticasCurrentes.obrigatorios?.mediana || 0) + ' dias', naoObrigatorio: (estatisticasCurrentes.naoObrigatorios?.mediana || 0) + ' dias'},
+                {metrica: '3º Quartil (Q3)', obrigatorio: (estatisticasCurrentes.obrigatorios?.terceiroQuartil || 0) + ' dias', naoObrigatorio: (estatisticasCurrentes.naoObrigatorios?.terceiroQuartil || 0) + ' dias'},
+                {metrica: 'Total de Estágios', obrigatorio: estatisticasCurrentes.obrigatorios?.totalEstagios || 0, naoObrigatorio: estatisticasCurrentes.naoObrigatorios?.totalEstagios || 0}
+              ]"
+              [style]="{'font-size': '13px'}"
+              styleClass="p-datatable-sm p-datatable-striped tabela-completa"
+              responsiveLayout="scroll">
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th [style]="{'text-align': 'left', 'width': '40%', 'background-color': '#f5f5f5'}">Métrica</th>
+                  <th [style]="{'text-align': 'right', 'width': '30%', 'background-color': '#e8f5e9', 'color': '#1b5e20'}">Obrigatórios</th>
+                  <th [style]="{'text-align': 'right', 'width': '30%', 'background-color': '#f3e5f5', 'color': '#6a1b9a'}">Não Obrigatórios</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-rowData>
+                <tr>
+                  <td [style]="{'font-weight': '600', 'color': '#071D41', 'text-align': 'left'}">
+                    {{ rowData.metrica }}
+                  </td>
+                  <td [style]="{'text-align': 'right', 'font-weight': '600', 'color': '#1b5e20'}">
+                    {{ rowData.obrigatorio }}
+                  </td>
+                  <td [style]="{'text-align': 'right', 'font-weight': '600', 'color': '#6a1b9a'}">
+                    {{ rowData.naoObrigatorio }}
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+
+          <!-- Gráficos Box Plot (Obrigatório e Não Obrigatório) -->
+          <div *ngIf="estatisticasCurrentes && !isLoadingDuracao" style="margin-top: 40px;">
+            <h3 style="margin-bottom: 30px; color: #2c3e50; font-size: 18px;">Distribuição da Duração dos Estágios (Box Plot)</h3>
+
+            <!-- Gráfico 1: Estágios Obrigatórios (em cima) -->
+            <div *ngIf="estatisticasCurrentes.obrigatorios && estatisticasCurrentes.obrigatorios.totalEstagios > 0"
+                 style="position: relative; width: 100%; height: 500px; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 40px; box-sizing: border-box; display: flex; flex-direction: column;">
+              <canvas #boxplotChartObrigatorio style="flex: 1; width: 100% !important; min-height: 0;"></canvas>
+            </div>
+
+            <!-- Mensagem se não houver obrigatórios -->
+            <div *ngIf="!estatisticasCurrentes.obrigatorios || estatisticasCurrentes.obrigatorios.totalEstagios === 0"
+                 style="position: relative; width: 100%; height: 450px; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; display: flex; align-items: center; justify-content: center; color: #999; margin-bottom: 40px;">
+              <p>Nenhum estágio obrigatório disponível</p>
+            </div>
+
+            <!-- Gráfico 2: Estágios Não Obrigatórios (em baixo) -->
+            <div *ngIf="estatisticasCurrentes.naoObrigatorios && estatisticasCurrentes.naoObrigatorios.totalEstagios > 0"
+                 style="position: relative; width: 100%; height: 500px; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); box-sizing: border-box; display: flex; flex-direction: column;">
+              <canvas #boxplotChartNaoObrigatorio style="flex: 1; width: 100% !important; min-height: 0;"></canvas>
+            </div>
+
+            <!-- Mensagem se não houver não obrigatórios -->
+            <div *ngIf="!estatisticasCurrentes.naoObrigatorios || estatisticasCurrentes.naoObrigatorios.totalEstagios === 0"
+                 style="position: relative; width: 100%; height: 450px; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; display: flex; align-items: center; justify-content: center; color: #999;">
+              <p>Nenhum estágio não obrigatório disponível</p>
+            </div>
+          </div>
+
+          <!-- Mensagem Sem Dados -->
+          <div *ngIf="!estatisticasCurrentes || (estatisticasCurrentes.obrigatorios?.totalEstagios === 0 && estatisticasCurrentes.naoObrigatorios?.totalEstagios === 0) && !isLoadingDuracao && !errorMessageDuracao" class="no-data">
+            <i class="pi pi-info-circle"></i>
+            <p>Nenhum dado de duração de estágios disponível.</p>
+          </div>
+        </div>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+</div>

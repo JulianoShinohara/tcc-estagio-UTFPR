@@ -1,7 +1,8 @@
-<div class="container">
-  <h1>Consulta de Estágio</h1>
+<div class="estudante-container">
+  <div class="content-wrapper">
+    <h1 class="page-title">Consulta de Estágio</h1>
 
-  <div class="search-container">
+    <div class="search-container">
     <input
       type="text"
       [(ngModel)]="nomeEstudante"
@@ -34,7 +35,7 @@
         <p>
           <strong>Tipo:</strong>
           <span [class.obrigatorio]="periodo.obrigatorio" [class.optativo]="!periodo.obrigatorio">
-            {{ periodo.obrigatorio ? 'Estágio Obrigatório' : 'Estágio Optativo' }}
+            {{ periodo.obrigatorio ? 'Estágio Obrigatório' : 'Estágio Não Obrigatório' }}
           </span>
         </p>
       </div>
@@ -114,5 +115,6 @@
         </p>
       </div>
     </div>
+  </div>
   </div>
 </div>

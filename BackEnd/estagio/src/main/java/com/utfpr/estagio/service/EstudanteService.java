@@ -33,36 +33,30 @@ public class EstudanteService {
 
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-	// Colunas da tabela de relatórios enviados (Tabela Estágios)
-	private static final int COL_NOME = 0; // "Nome Estagiário"
-	private static final int COL_EMPRESA = 5; // Nome da empresa
-	private static final int COL_INICIO = 6; // "Início do Estágio"
-	private static final int COL_TERMINO = 7; // "Término do Estágio"
-	private static final int COL_CARGA_HORARIA_SEMANAL = 11; // Horas trabalhadas por semana
-	private static final int COL_BOOL_OBRIGATORIO = 13; // Estagio Obrigatorio ou não
+	private static final int COL_NOME = 0;
+	private static final int COL_EMPRESA = 5;
+	private static final int COL_INICIO = 6;
+	private static final int COL_TERMINO = 7;
+	private static final int COL_CARGA_HORARIA_SEMANAL = 11;
+	private static final int COL_BOOL_OBRIGATORIO = 13;
 
-	// Colunas da tabela de relatórios enviados (Tabela Relatórios)
-	private static final int COL_NOME_RELATORIO = 0; // Nome do estagiário na tabela de relatórios
-	private static final int COL_TIPO_RELATORIO = 2; // Tipo de relatório
-	private static final int COL_DATA_INICIO_RELATORIO = 3; // Data inicial do relatório
-	private static final int COL_DATA_FIM_RELATORIO = 4; // Data final do relatório
+	private static final int COL_NOME_RELATORIO = 0;
+	private static final int COL_TIPO_RELATORIO = 2;
+	private static final int COL_DATA_INICIO_RELATORIO = 3;
+	private static final int COL_DATA_FIM_RELATORIO = 4;
 
-	// Quantidade de meses para calcular o periodo de entrega do relatorio parcial
 	private static final int QTDE_MES_RELATORIO_PARCIAL = 6;
 
-	// Caso a pessoa não tenha cadastrado a quantidade de horas semanais trabalhado,
-	// é definido "QTDE_DIAS_VISITA_TECNICA_PADRÃO" (30 dias) por padrão.
-	// Caso tenha a quantidade de horas semanais é calculado
-	// "HORAS_TOTAIS_RELATORIO_VISITA" (100 horas) trabalhado para emitir a data.
+	/**
+	 * Lógica para cálculo de data do relatório de visita:
+	 * - Se não informado carga horária: usa 30 dias padrão
+	 * - Se informado: calcula baseado em 100 horas trabalhadas
+	 */
 	private static final int QTDE_DIAS_VISITA_TECNICA_PADRAO = 30;
-	private static final int HORAS_TOTAIS_RELATORIO_VISITA = 100; // Quantidade de horas trabalhada necessaria para o
-																	// relatorio da visita.
+	private static final int HORAS_TOTAIS_RELATORIO_VISITA = 100;
 
 	/**
-	 * 
-	 * @param nomeEstudante
-	 * @return
-	 * @throws IOException
+	 * Busca informações de estágios de um estudante pelo nome
 	 */
 	public Optional<EstudanteDto> getEstagioPorNome(String nomeEstudante) throws IOException {
 		String nomeDecodificado = URLDecoder.decode(nomeEstudante, StandardCharsets.UTF_8);
@@ -168,13 +162,7 @@ public class EstudanteService {
 	}
 
 	/**
-	 * 
-	 * @param nomeEstudante
-	 * @param relatoriosEnviados
-	 * @param relatoriosAluno
-	 * @param relatoriosOrientador
-	 * @param dataRelatorioVisita
-	 * @param dataRelatorioFinal
+	 * Verifica quais relatórios foram enviados e marca como enviados no período
 	 */
 	private void verificarRelatoriosEnviados(String nomeEstudante, List<List<Object>> relatoriosEnviados,
 			List<DatasRelatoriosParciaisDto> relatoriosAluno,
@@ -225,10 +213,7 @@ public class EstudanteService {
 	}
 
 	/**
-	 * 
-	 * @param inicio
-	 * @param termino
-	 * @return
+	 * Calcula os períodos de relatórios parciais e combina com os já enviados
 	 */
 	private List<DatasRelatoriosParciaisDto> calcularPeriodosComRelatorios(
 		    LocalDate inicio, 
@@ -269,9 +254,7 @@ public class EstudanteService {
 		}
 
 	/**
-	 * 
-	 * @param dataInicio
-	 * @return
+	 * Calcula a data do relatório de visita baseado na carga horária semanal
 	 */
 	private LocalDate calcularDataRelatorioVisita(LocalDate dataInicio, int cargaHorariaSemanal) {
 		if (cargaHorariaSemanal <= 0) {
@@ -284,15 +267,13 @@ public class EstudanteService {
 		return dataInicio.plusDays(diasNecessarios);
 	}
 
-	/**
-	 * 
-	 * @param dataTermino
-	 * @return
-	 */
 	private LocalDate calcularDataRelatorioFinal(LocalDate dataTermino) {
 		return dataTermino.plusDays(7);
 	}
 
+	/**
+	 * Calcula o intervalo de avaliação baseado no término do estágio e semestre acadêmico
+	 */
 	private AvaliacaoDto calcularIntervaloAvaliacao(LocalDate termino, SemestreAcademico semestreAtual)
 			throws IOException {
 		LocalDate duasSemanasAntesFinal = semestreAtual.dataFinal().minusWeeks(2);
@@ -312,11 +293,6 @@ public class EstudanteService {
 
 	}
 
-	/**
-	 * 
-	 * @param str
-	 * @return
-	 */
 	private String normalizarString(String str) {
 		return Normalizer.normalize(str, Normalizer.Form.NFD).replaceAll("\\p{M}", "").toLowerCase();
 	}

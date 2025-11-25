@@ -11,8 +11,7 @@ import { NgIf, NgFor, DatePipe } from '@angular/common';
   standalone: true,
   imports: [FormsModule, CommonModule, HttpClientModule, NgIf, NgFor, DatePipe],
   templateUrl: './estudante.component.html',
-  styleUrl: './estudante.component.scss',
-
+  styleUrl: './estudante.component.scss'
 })
 export class EstudanteComponent {
   estudante: EstudanteDto | null = null;

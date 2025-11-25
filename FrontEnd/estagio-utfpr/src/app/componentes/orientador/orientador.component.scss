@@ -1,0 +1,639 @@
+// Cores UTFPR
+$amarelo-utfpr: #FFBE00;
+$azul-utfpr: #071D41;
+$vermelho: #dc3545;
+$verde: #28a745;
+$cinza-claro: #f8f9fa;
+$cinza-medio: #6c757d;
+$cinza-escuro: #343a40;
+
+.orientador-container {
+  min-height: calc(100vh - 80px);
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 30px 20px;
+
+  .content-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .page-title {
+    color: $azul-utfpr;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid $amarelo-utfpr;
+    text-align: center;
+  }
+
+  .search-container {
+    max-width: 500px;
+    margin: 0 auto 20px;
+  }
+
+  .loading-message {
+    text-align: center;
+    padding: 15px;
+    color: $azul-utfpr;
+    font-size: 14px;
+
+    .loading-spinner {
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+  }
+
+  .error-message {
+    background: #ffe6e6;
+    color: $vermelho;
+    padding: 12px;
+    border-radius: 5px;
+    text-align: center;
+    margin: 15px 0;
+    font-size: 14px;
+  }
+
+  .results-container {
+    h2 {
+      color: $azul-utfpr;
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    .total-estudantes {
+      text-align: center;
+      color: $cinza-medio;
+      margin-bottom: 20px;
+      font-style: italic;
+      font-size: 14px;
+    }
+
+    .estagios-em-andamento-container {
+      background: linear-gradient(135deg, #fff9e6 0%, #fffef2 100%);
+      border: 2px solid $amarelo-utfpr;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 12px rgba($amarelo-utfpr, 0.2);
+
+      .titulo-em-andamento {
+        color: $azul-utfpr;
+        margin: 0 0 20px 0;
+        font-size: 18px;
+      }
+
+      .estagio-em-andamento-card {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 5px solid $verde;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: box-shadow 0.3s ease;
+
+        &:hover {
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 15px;
+          padding-bottom: 10px;
+          border-bottom: 2px solid #f0f0f0;
+          transition: background-color 0.2s ease;
+
+          &:hover {
+            background-color: #f9f9f9;
+          }
+
+          .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+          }
+
+          .header-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          }
+
+          .aluno-nome {
+            color: $azul-utfpr;
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+          }
+
+          .badge-ativo {
+            background: $verde;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+            white-space: nowrap;
+          }
+
+          .resumo-colapsado {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 20px;
+            font-size: 13px;
+            color: $cinza-medio;
+
+            span {
+              display: flex;
+              align-items: center;
+
+              strong {
+                color: $cinza-escuro;
+                margin-right: 5px;
+              }
+            }
+          }
+
+          .collapse-icon-andamento {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            color: $azul-utfpr;
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+
+            &.expanded {
+              transform: rotate(180deg);
+            }
+
+            i {
+              font-size: 16px;
+            }
+          }
+        }
+
+        .card-content {
+          .info-section {
+            margin-bottom: 15px;
+
+            p {
+              margin: 6px 0;
+              font-size: 14px;
+
+              strong {
+                color: $cinza-escuro;
+              }
+
+              .obrigatorio {
+                background: $vermelho;
+                color: white;
+                padding: 4px 10px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: bold;
+              }
+
+              .optativo {
+                background: $verde;
+                color: white;
+                padding: 4px 10px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: bold;
+              }
+            }
+          }
+
+          .relatorios-section,
+          .relatorio-final,
+          .avaliacao-section {
+            padding: 12px 0;
+            border-top: 1px solid #f0f0f0;
+            margin-top: 12px;
+
+            h5 {
+              color: $azul-utfpr;
+              margin: 0 0 10px 0;
+              border-left: 4px solid $azul-utfpr;
+              padding-left: 8px;
+              font-size: 14px;
+            }
+
+            .relatorio-item {
+              background: $cinza-claro;
+              padding: 8px 10px;
+              border-radius: 5px;
+              margin-bottom: 6px;
+
+              &:last-child {
+                margin-bottom: 0;
+              }
+
+              p {
+                margin: 0;
+                color: $cinza-medio;
+                font-size: 13px;
+              }
+            }
+
+            p {
+              margin: 6px 0;
+              font-size: 14px;
+
+              strong {
+                color: $cinza-escuro;
+              }
+            }
+
+            .status {
+              padding: 3px 8px;
+              border-radius: 8px;
+              font-size: 12px;
+              font-weight: bold;
+              margin-left: 6px;
+
+              &.enviado {
+                background: #d4edda;
+                color: #155724;
+              }
+
+              &:not(.enviado) {
+                background: #fff3cd;
+                color: #856404;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .bulk-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 25px;
+
+      .bulk-btn {
+        padding: 8px 16px;
+        background: $azul-utfpr;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 13px;
+
+        &:hover {
+          background: lighten($azul-utfpr, 10%);
+        }
+
+        .icon {
+          margin-right: 6px;
+        }
+      }
+    }
+  }
+
+  .estudante-container {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+
+    .estudante-header {
+      background: $azul-utfpr;
+      color: white;
+      padding: 15px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      &:hover {
+        background: lighten($azul-utfpr, 10%);
+      }
+
+      .estudante-nome {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+
+      .estudante-stats {
+        font-size: 13px;
+        opacity: 0.9;
+      }
+
+      .collapse-icon {
+        transition: transform 0.3s;
+
+        &.expanded {
+          transform: rotate(180deg);
+        }
+      }
+    }
+
+    .estudante-content {
+      .student-actions {
+        background: $cinza-claro;
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+
+        .action-btn {
+          padding: 7px 14px;
+          background: $amarelo-utfpr;
+          color: $azul-utfpr;
+          border: none;
+          border-radius: 5px;
+          margin: 0 4px;
+          cursor: pointer;
+          font-weight: bold;
+          font-size: 13px;
+
+          &:hover {
+            background: darken($amarelo-utfpr, 10%);
+          }
+        }
+      }
+    }
+  }
+
+  .periodo-container {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin: 15px;
+    background: $cinza-claro;
+
+    .periodo-header {
+      background: $amarelo-utfpr;
+      color: $azul-utfpr;
+      padding: 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      border-left: 5px solid transparent;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: darken($amarelo-utfpr, 10%);
+      }
+
+      &.em-andamento {
+        background: linear-gradient(90deg, $amarelo-utfpr 0%, lighten($amarelo-utfpr, 5%) 100%);
+        border-left-color: $verde;
+        box-shadow: inset -4px 0 0 rgba($verde, 0.2);
+      }
+
+      h4 {
+        margin: 0 0 4px 0;
+        font-size: 15px;
+      }
+
+      .header-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 4px;
+
+        h4 {
+          margin: 0;
+        }
+
+        .badge-em-andamento {
+          background: $verde;
+          color: white;
+          padding: 3px 10px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: bold;
+          white-space: nowrap;
+          animation: pulse 2s infinite;
+        }
+      }
+
+      .periodo-summary {
+        font-size: 13px;
+        opacity: 0.8;
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .periodo-datas {
+        font-size: 12px;
+        opacity: 0.7;
+        display: block;
+        font-style: italic;
+        color: $cinza-escuro;
+      }
+
+      .collapse-icon-small {
+        transition: transform 0.3s;
+
+        &.expanded {
+          transform: rotate(180deg);
+        }
+      }
+    }
+
+    .periodo-content {
+      background: white;
+
+      .info-adicional,
+      .periodo-info {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+
+        p {
+          margin: 6px 0;
+          font-size: 14px;
+
+          strong {
+            color: $cinza-escuro;
+          }
+        }
+
+        .obrigatorio {
+          background: $vermelho;
+          color: white;
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: bold;
+        }
+
+        .optativo {
+          background: $verde;
+          color: white;
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: bold;
+        }
+      }
+
+      .relatorios-section,
+      .relatorio-visita,
+      .relatorio-final,
+      .avaliacao-section {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        h5 {
+          color: $azul-utfpr;
+          margin: 0 0 12px 0;
+          border-left: 4px solid $azul-utfpr;
+          padding-left: 8px;
+          font-size: 15px;
+        }
+
+        .relatorio-item {
+          background: $cinza-claro;
+          padding: 10px;
+          border-radius: 5px;
+          margin-bottom: 8px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          p {
+            margin: 0;
+            color: $cinza-medio;
+            font-size: 13px;
+          }
+        }
+
+        p {
+          margin: 6px 0;
+          font-size: 14px;
+
+          strong {
+            color: $cinza-escuro;
+          }
+        }
+
+        .status {
+          padding: 3px 8px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: bold;
+          margin-left: 6px;
+
+          &.enviado {
+            background: #d4edda;
+            color: #155724;
+          }
+
+          &:not(.enviado) {
+            background: #fff3cd;
+            color: #856404;
+          }
+        }
+      }
+    }
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 30px;
+    background: $cinza-claro;
+    border-radius: 8px;
+    margin-top: 20px;
+
+    h3 {
+      color: $cinza-medio;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+
+    p {
+      color: $cinza-medio;
+      font-size: 14px;
+    }
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+  // Mobile
+  @media (max-width: 768px) {
+    .content-wrapper {
+      padding: 15px;
+
+      .bulk-actions {
+        flex-direction: column;
+        align-items: center;
+
+        .bulk-btn {
+          width: 100%;
+          max-width: 300px;
+        }
+      }
+
+      .estudante-container {
+        .estudante-header {
+          padding: 15px;
+        }
+
+        .estudante-content .student-actions {
+          .action-btn {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+          }
+        }
+      }
+
+      .periodo-container {
+        margin: 15px;
+
+        .periodo-content {
+          .info-adicional,
+          .periodo-info,
+          .relatorios-section,
+          .relatorio-visita,
+          .relatorio-final,
+          .avaliacao-section {
+            padding: 15px;
+          }
+        }
+      }
+    }
+  }

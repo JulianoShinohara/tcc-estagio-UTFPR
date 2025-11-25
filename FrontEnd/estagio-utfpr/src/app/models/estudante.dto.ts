@@ -21,33 +21,28 @@ export interface PeriodoEstagioDto {
     obrigatorio: boolean;
 }
 
-// DatasRelatoriosParciaisAlunoDto.ts
 export interface DatasRelatoriosParciaisAlunoDto {
     inicioPeriodoRelatorio: Date;
     fimPeriodoRelatorio: Date;
     enviado: boolean;
 }
 
-// DatasRelatoriosParciaisOrientadorDto.ts
 export interface DatasRelatoriosParciaisOrientadorDto {
     inicioPeriodoRelatorio: Date;
     fimPeriodoRelatorio: Date;
     enviado: boolean;
 }
 
-// AvaliacaoDto.ts
 export interface AvaliacaoDto {
     dataInicio: Date;
     dataFim: Date;
 }
 
-// RelatorioVisitaDto.ts (opcional - pode ser incorporado no PeriodoEstagioDto)
 export interface RelatorioVisitaDto {
     dataLimite: Date;
     enviado: boolean;
 }
 
-// RelatorioFinalDto.ts (opcional - pode ser incorporado no PeriodoEstagioDto)
 export interface RelatorioFinalDto {
     dataLimite: Date;
     enviado: boolean;

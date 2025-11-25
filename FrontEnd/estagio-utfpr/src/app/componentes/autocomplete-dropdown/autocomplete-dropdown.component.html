@@ -1,0 +1,61 @@
+<div class="autocomplete-container">
+  <label *ngIf="label" class="autocomplete-label">{{ label }}</label>
+  
+  <div class="input-wrapper" [class.focused]="isFocused" [class.has-value]="selectedValue || inputValue">
+    <input
+      #inputElement
+      type="text"
+      class="autocomplete-input"
+      [placeholder]="placeholder"
+      [(ngModel)]="inputValue"
+      (input)="onInputChange($event)"
+      (focus)="onFocus()"
+      (blur)="onBlur()"
+      (keydown)="onKeyDown($event)"
+      autocomplete="off"
+    />
+    
+    <div class="input-icons">
+      <!-- <i class="search-icon" *ngIf="!isLoading && !selectedValue">🔍</i> -->
+      <!-- <i class="loading-icon" *ngIf="isLoading">⟳</i> -->
+      <i class="clear-icon" *ngIf="selectedValue || inputValue" (click)="clearSelection()">✕</i>
+    </div>
+  </div>
+
+  <div 
+    class="dropdown-menu" 
+    *ngIf="showDropdown && (filteredOptions.length > 0 || isLoading || noResultsFound)"
+    [class.show]="showDropdown"
+  >
+    <!-- Loading state -->
+    <div class="dropdown-item loading-item" *ngIf="isLoading">
+      <i class="loading-spinner">⟳</i>
+      <span>{{ optionsLoaded ? 'Filtrando orientadores...' : 'Carregando orientadores...' }}</span>
+    </div>
+
+    <!-- No results -->
+    <div class="dropdown-item no-results" *ngIf="noResultsFound && !isLoading">
+      <i class="no-results-icon">🔍</i>
+      <span>Nenhum orientador encontrado</span>
+    </div>
+
+    <!-- Options -->
+    <div 
+      class="dropdown-item" 
+      *ngFor="let option of filteredOptions; let i = index"
+      [class.highlighted]="i === highlightedIndex"
+      (click)="selectOption(option)"
+      (mouseenter)="highlightedIndex = i"
+    >
+      <div class="option-content">
+        <span class="option-name" [innerHTML]="highlightMatch(option)"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error message -->
+  <div class="error-message" *ngIf="errorMessage">
+    <i class="error-icon">⚠️</i>
+    <span>{{ errorMessage }}</span>
+  </div>
+</div>

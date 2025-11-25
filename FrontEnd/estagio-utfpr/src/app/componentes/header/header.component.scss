@@ -1,0 +1,76 @@
+// Cores UTFPR
+$amarelo-utfpr: #FFBE00;
+$azul-utfpr: #071D41;
+$cinza-claro: #f8f9fa;
+$cinza-medio: #6c757d;
+
+.header {
+  background: $azul-utfpr;
+  color: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  .header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+  }
+
+  .logo-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    .utfpr-logo {
+      height: 50px;
+      width: auto;
+    }
+
+    .institution-info {
+      .campus-name {
+        font-size: 18px;
+        font-weight: bold;
+        margin: 0 0 5px 0;
+      }
+
+      .system-name {
+        font-size: 14px;
+        margin: 0;
+        opacity: 0.9;
+      }
+    }
+  }
+
+  .navigation {
+    display: flex;
+    gap: 15px;
+
+    .nav-button {
+      background: transparent;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.6);
+      }
+
+      &.active {
+        background: $amarelo-utfpr;
+        color: $azul-utfpr;
+        border-color: $amarelo-utfpr;
+      }
+    }
+  }
+}

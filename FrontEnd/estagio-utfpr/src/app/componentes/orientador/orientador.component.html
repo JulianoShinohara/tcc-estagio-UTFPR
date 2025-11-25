@@ -1,0 +1,275 @@
+<div class="orientador-container">
+  <div class="content-wrapper">
+    <h1 class="page-title">Consulta por Orientador</h1>
+
+    <div class="search-container">
+    <app-autocomplete-dropdown
+      #orientadorDropdown
+      [placeholder]="'Digite ou selecione o nome do orientador...'"
+      [loadOptionsFunction]="loadAllOrientadores"
+      [minCharacters]="0"
+      [debounceTime]="200"
+      (orientadorSelected)="onOrientadorSelected($event)"
+      (inputCleared)="onInputCleared()"
+    ></app-autocomplete-dropdown>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading-message">
+    <i class="loading-spinner">⟳</i>
+    <span>Carregando estágios...</span>
+  </div>
+
+  <!-- Resultados dos estágios por estudante -->
+  <div *ngIf="estudantesComEstagios && estudantesComEstagios.length > 0" class="results-container">
+    <h2>Orientador: {{ orientadorSelecionado }}</h2>
+    <p class="total-estudantes">{{ estudantesComEstagios.length }} estudante(s) encontrado(s)</p>
+
+    <!-- Seção de Estágios em Andamento -->
+    <div *ngIf="obterEstagiosEmAndamento().length > 0" class="estagios-em-andamento-container">
+      <h3 class="titulo-em-andamento">
+        Estágios em Andamento
+      </h3>
+
+      <div *ngFor="let item of obterEstagiosEmAndamento()" class="estagio-em-andamento-card">
+        <div class="card-header" (click)="toggleCollapseEstagioAndamento(item.estudanteIndex, item.periodoIndex)" [style.cursor]="'pointer'">
+          <div class="header-left">
+            <div class="header-info">
+              <h4 class="aluno-nome">{{ item.nomeEstudante }}</h4>
+              <span class="badge-ativo">ATIVO</span>
+            </div>
+            <!-- Resumo quando colapsado -->
+            <div *ngIf="item.collapsed" class="resumo-colapsado">
+              <span><strong>Empresa:</strong> {{ item.periodo.empresa || 'Não informado' }}</span>
+              <span><strong>Tipo:</strong> {{ item.periodo.obrigatorio ? 'Obrigatório' : 'Não Obrigatório' }}</span>
+              <span><strong>Início:</strong> {{ item.periodo.dataInicioEstagio }}</span>
+              <span><strong>Término:</strong> {{ item.periodo.dataTerminoEstagio }}</span>
+            </div>
+          </div>
+          <div class="collapse-icon-andamento" [class.expanded]="!item.collapsed">
+            <i>▼</i>
+          </div>
+        </div>
+
+        <div class="card-content" *ngIf="!item.collapsed">
+          <div class="info-section">
+            <p><strong>Empresa:</strong> {{ item.periodo.empresa || 'Não informado' }}</p>
+            <p>
+              <strong>Tipo:</strong>
+              <span [class.obrigatorio]="item.periodo.obrigatorio" [class.optativo]="!item.periodo.obrigatorio">
+                {{ item.periodo.obrigatorio ? 'Estágio Obrigatório' : 'Estágio Não Obrigatório' }}
+              </span>
+            </p>
+          </div>
+
+          <div class="info-section">
+            <p>
+              <strong>Início:</strong>
+              {{ item.periodo.dataInicioEstagio }}
+            </p>
+            <p>
+              <strong>Término:</strong>
+              {{ item.periodo.dataTerminoEstagio }}
+            </p>
+          </div>
+
+          <div class="relatorios-section" *ngIf="item.periodo.datasRelatoriosParciaisAluno && item.periodo.datasRelatoriosParciaisAluno.length > 0">
+            <h5>Relatórios Parciais do Aluno</h5>
+            <div *ngFor="let relatorio of item.periodo.datasRelatoriosParciaisAluno" class="relatorio-item">
+              <p>
+                Período: {{ relatorio.inicioPeriodoRelatorio }} até {{ relatorio.fimPeriodoRelatorio }}
+                <span class="status" [class.enviado]="relatorio.enviado">
+                  {{ relatorio.enviado ? "✓ Enviado" : "✗ Pendente" }}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div class="relatorios-section" *ngIf="item.periodo.datasRelatoriosParciaisOrientador && item.periodo.datasRelatoriosParciaisOrientador.length > 0">
+            <h5>Relatórios Parciais do Orientador</h5>
+            <div *ngFor="let relatorio of item.periodo.datasRelatoriosParciaisOrientador" class="relatorio-item">
+              <p>
+                Período: {{ relatorio.inicioPeriodoRelatorio }} até {{ relatorio.fimPeriodoRelatorio }}
+                <span class="status" [class.enviado]="relatorio.enviado">
+                  {{ relatorio.enviado ? "✓ Enviado" : "✗ Pendente" }}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div class="relatorios-section" *ngIf="item.periodo.dataRelatorioVisita">
+            <h5>Relatório de Visita</h5>
+            <p>
+              Data limite: {{ item.periodo.dataRelatorioVisita }}
+              <span class="status" [class.enviado]="item.periodo.enviadoRelatorioVisita">
+                {{ item.periodo.enviadoRelatorioVisita ? "✓ Enviado" : "✗ Pendente" }}
+              </span>
+            </p>
+          </div>
+
+          <div class="relatorio-final" *ngIf="item.periodo.dataRelatorioFinal">
+            <h5>Relatório Final</h5>
+            <p>
+              Data limite: {{ item.periodo.dataRelatorioFinal }}
+              <span class="status" [class.enviado]="item.periodo.enviadoRelatorioFinal">
+                {{ item.periodo.enviadoRelatorioFinal ? "✓ Enviado" : "✗ Pendente" }}
+              </span>
+            </p>
+          </div>
+
+          <div class="avaliacao-section" *ngIf="item.periodo.intervaloAvaliacao">
+            <h5>Avaliação de Estágio</h5>
+            <p>
+              Período: {{ item.periodo.intervaloAvaliacao.dataInicio }} até {{ item.periodo.intervaloAvaliacao.dataFim }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div 
+      *ngFor="let estudante of estudantesComEstagios; let estudanteIndex = index" 
+      class="estudante-container"
+      [class.collapsed]="estudante.collapsed"
+    >
+      <!-- Header do estudante clicável -->
+      <div class="estudante-header" (click)="toggleEstudante(estudanteIndex)">
+        <div class="estudante-info">
+          <h3 class="estudante-nome">Estudante: {{ estudante.nomeEstudante }}</h3>
+          <span class="estudante-stats">{{ estudante.periodosEstagio.length }} estágio(s)</span>
+        </div>
+        <div class="collapse-icon" [class.expanded]="!estudante.collapsed">
+          <i>▼</i>
+        </div>
+      </div>
+
+      <!-- Conteúdo do estudante (colapsável) -->
+      <div class="estudante-content" *ngIf="!estudante.collapsed">
+        <div
+          *ngFor="let periodo of estudante.periodosEstagio; let i = index"
+          class="periodo-container"
+          [class.collapsed]="periodo.collapsed"
+        >
+          <!-- Header do estágio clicável -->
+          <div class="periodo-header" [class.em-andamento]="periodo.emAndamento" (click)="toggleEstagio(estudanteIndex, i)">
+            <div class="periodo-info-header">
+              <div class="header-top">
+                <h4>Estágio {{ i + 1 }}</h4>
+                <span *ngIf="periodo.emAndamento" class="badge-em-andamento">
+                  Em Andamento
+                </span>
+              </div>
+              <span class="periodo-summary">
+                {{ periodo.empresa || 'Empresa não informada' }} |
+                {{ periodo.obrigatorio ? 'Obrigatório' : 'Não Obrigatório' }}
+              </span>
+              <span class="periodo-datas">
+                {{ periodo.dataInicioEstagio }} até {{ periodo.dataTerminoEstagio }}
+              </span>
+            </div>
+            <div class="collapse-icon-small" [class.expanded]="!periodo.collapsed">
+              <i>▼</i>
+            </div>
+          </div>
+
+          <!-- Conteúdo do estágio (colapsável) -->
+          <div class="periodo-content" *ngIf="!periodo.collapsed">
+            <div class="info-adicional">
+              <p><strong>Empresa:</strong> {{ periodo.empresa || 'Não informado' }}</p>
+              <p>
+                <strong>Tipo:</strong>
+                <span [class.obrigatorio]="periodo.obrigatorio" [class.optativo]="!periodo.obrigatorio">
+                  {{ periodo.obrigatorio ? 'Estágio Obrigatório' : 'Estágio Não Obrigatório' }}
+                </span>
+              </p>
+            </div>
+
+            <div class="periodo-info">
+              <p>
+                <strong>Início:</strong>
+                {{ periodo.dataInicioEstagio}}
+              </p>
+              <p>
+                <strong>Término:</strong>
+                {{ periodo.dataTerminoEstagio}}
+              </p>
+            </div>
+
+            <div class="relatorios-section">
+              <h5>Relatórios Parciais do Aluno</h5>
+              <div
+                *ngFor="let relatorio of periodo.datasRelatoriosParciaisAluno"
+                class="relatorio-item"
+              >
+                <p>
+                  Período:
+                  {{ relatorio.inicioPeriodoRelatorio}} até
+                  {{ relatorio.fimPeriodoRelatorio}}
+                  <span class="status" [class.enviado]="relatorio.enviado">
+                    {{ relatorio.enviado ? "✓ Enviado" : "✗ Pendente" }}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div class="relatorios-section">
+              <h5>Relatórios Parciais do Orientador</h5>
+              <div
+                *ngFor="let relatorio of periodo.datasRelatoriosParciaisOrientador"
+                class="relatorio-item"
+              >
+                <p>
+                  Período:
+                  {{ relatorio.inicioPeriodoRelatorio}} até
+                  {{ relatorio.fimPeriodoRelatorio}}
+                  <span class="status" [class.enviado]="relatorio.enviado">
+                    {{ relatorio.enviado ? "✓ Enviado" : "✗ Pendente" }}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div *ngIf="periodo.dataRelatorioVisita" class="relatorio-visita">
+              <h5>Relatório de Visita</h5>
+              <p>
+                Data limite: {{ periodo.dataRelatorioVisita}}
+                <span class="status" [class.enviado]="periodo.enviadoRelatorioVisita">
+                  {{ periodo.enviadoRelatorioVisita ? "✓ Enviado" : "✗ Pendente" }}
+                </span>
+              </p>
+            </div>
+
+            <div class="relatorio-final">
+              <h5>Relatório Final</h5>
+              <p>
+                Data limite: {{ periodo.dataRelatorioFinal}}
+                <span class="status" [class.enviado]="periodo.enviadoRelatorioFinal">
+                  {{ periodo.enviadoRelatorioFinal ? "✓ Enviado" : "✗ Pendente" }}
+                </span>
+              </p>
+            </div>
+
+            <div *ngIf="periodo.intervaloAvaliacao" class="avaliacao-section">
+              <h5>Avaliação de Estágio</h5>
+              <p>
+                Período:
+                {{ periodo.intervaloAvaliacao.dataInicio}}
+                até
+                {{ periodo.intervaloAvaliacao.dataFim}}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="orientadorSelecionado && estudantesComEstagios?.length === 0 && !isLoading && !errorMessage" class="no-results">
+    <h3>Nenhum estágio encontrado</h3>
+    <p>O orientador {{ orientadorSelecionado }} não possui estágios cadastrados no momento.</p>
+  </div>
+  </div>
+</div>

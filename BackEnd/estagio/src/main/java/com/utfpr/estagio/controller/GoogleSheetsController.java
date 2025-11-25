@@ -20,7 +20,7 @@ public class GoogleSheetsController {
 
 	private final GoogleSheetsService googleSheetsService;
 
-    @GetMapping("read")
+    @GetMapping("/read")
     public List<List<Object>> getRawSheetData() throws IOException {
         return googleSheetsService.getEstudantesFromSheet();
     }
