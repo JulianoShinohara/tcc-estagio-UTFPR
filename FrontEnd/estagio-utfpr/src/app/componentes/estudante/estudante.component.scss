@@ -99,111 +99,185 @@ $cinza-escuro: #343a40;
     margin-bottom: 20px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 
-    h3 {
+    .periodo-header {
       background: $amarelo-utfpr;
       color: $azul-utfpr;
-      margin: 0;
-      padding: 12px;
-      text-align: center;
-      font-size: 16px;
-      font-weight: bold;
-    }
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      border-radius: 8px 8px 0 0;
+      user-select: none;
+      transition: background-color 0.3s ease;
 
-    .info-adicional,
-    .periodo-info {
-      padding: 15px;
-      border-bottom: 1px solid #eee;
+      &:hover {
+        background: darken($amarelo-utfpr, 5%);
+      }
 
-      p {
-        margin: 6px 0;
-        font-size: 14px;
+      .periodo-info-header {
+        flex: 1;
 
-        strong {
-          color: $cinza-escuro;
+        .header-top {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 6px;
+
+          h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+            color: $azul-utfpr;
+          }
+        }
+
+        .periodo-summary {
+          display: block;
+          font-size: 13px;
+          color: $azul-utfpr;
+          margin-bottom: 4px;
+        }
+
+        .periodo-datas {
+          display: block;
+          font-size: 12px;
+          color: $azul-utfpr;
+          opacity: 0.8;
         }
       }
 
-      .obrigatorio {
-        background: $vermelho;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: bold;
-      }
+      .collapse-icon-small {
+        font-size: 18px;
+        color: $azul-utfpr;
+        transition: transform 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
 
-      .optativo {
-        background: $verde;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: bold;
+        &.expanded {
+          transform: rotate(180deg);
+        }
+
+        i {
+          display: inline-block;
+        }
       }
     }
 
-    .relatorios-section,
-    .relatorio-visita,
-    .relatorio-final,
-    .avaliacao-section {
-      padding: 15px;
-      border-bottom: 1px solid #eee;
+    .periodo-content {
+      animation: slideDown 0.3s ease;
 
-      &:last-child {
-        border-bottom: none;
+      .info-adicional,
+      .periodo-info {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+
+        p {
+          margin: 6px 0;
+          font-size: 14px;
+
+          strong {
+            color: $cinza-escuro;
+          }
+        }
+
+        .obrigatorio {
+          background: $verde;
+          color: white;
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: bold;
+        }
+
+        .optativo {
+          background: $vermelho;
+          color: white;
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: bold;
+        }
       }
 
-      h4 {
-        color: $azul-utfpr;
-        margin: 0 0 12px 0;
-        border-left: 4px solid $azul-utfpr;
-        padding-left: 8px;
-        font-size: 15px;
-      }
-
-      .relatorio-item {
-        background: $cinza-claro;
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 8px;
+      .relatorios-section,
+      .relatorio-visita,
+      .relatorio-final,
+      .avaliacao-section {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
 
         &:last-child {
-          margin-bottom: 0;
+          border-bottom: none;
+        }
+
+        h5 {
+          color: $azul-utfpr;
+          margin: 0 0 12px 0;
+          border-left: 4px solid $azul-utfpr;
+          padding-left: 8px;
+          font-size: 14px;
+          font-weight: bold;
+        }
+
+        .relatorio-item {
+          background: $cinza-claro;
+          padding: 10px;
+          border-radius: 5px;
+          margin-bottom: 8px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          p {
+            margin: 0;
+            color: $cinza-medio;
+            font-size: 13px;
+          }
         }
 
         p {
-          margin: 0;
-          color: $cinza-medio;
-          font-size: 13px;
+          margin: 6px 0;
+          font-size: 14px;
+
+          strong {
+            color: $cinza-escuro;
+          }
+        }
+
+        .status {
+          padding: 3px 8px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: bold;
+          margin-left: 6px;
+
+          &.enviado {
+            background: #d4edda;
+            color: #155724;
+          }
+
+          &:not(.enviado) {
+            background: #fff3cd;
+            color: #856404;
+          }
         }
       }
+    }
+  }
 
-      p {
-        margin: 6px 0;
-        font-size: 14px;
-
-        strong {
-          color: $cinza-escuro;
-        }
-      }
-
-      .status {
-        padding: 3px 8px;
-        border-radius: 8px;
-        font-size: 12px;
-        font-weight: bold;
-        margin-left: 6px;
-
-        &.enviado {
-          background: #d4edda;
-          color: #155724;
-        }
-
-        &:not(.enviado) {
-          background: #fff3cd;
-          color: #856404;
-        }
-      }
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      max-height: 0;
+    }
+    to {
+      opacity: 1;
+      max-height: 2000px;
     }
   }
 }

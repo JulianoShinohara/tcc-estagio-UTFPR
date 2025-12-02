@@ -1242,14 +1242,29 @@ export class PraeComponent implements OnInit, AfterViewInit {
     });
   }
 
-  /**
-   * Mantém a estrutura hierárquica (sem necessidade de achatar dados para tabela expansível)
-   * Mantém os dados agrupados por empresa
-   */
   private flattenEmpresasComSupervisores(empresas: EmpresaComSupervisoresDto[]): any[] {
-    // Para linhas expansíveis, não achata os dados
-    // Mantém a estrutura hierárquica para que o template trate a expansão
-    return empresas;
+    return empresas.map(empresa => {
+      const supervisoresConsolidados = new Map<string, any>();
+
+      empresa.supervisores.forEach((supervisor: any) => {
+        const nome = supervisor.nomeSupervisor;
+
+        if (supervisoresConsolidados.has(nome)) {
+          const existente = supervisoresConsolidados.get(nome);
+          existente.quantidadeEstagios += supervisor.quantidadeEstagios || 0;
+        } else {
+          supervisoresConsolidados.set(nome, {
+            nomeSupervisor: supervisor.nomeSupervisor,
+            quantidadeEstagios: supervisor.quantidadeEstagios || 0
+          });
+        }
+      });
+
+      return {
+        ...empresa,
+        supervisores: Array.from(supervisoresConsolidados.values())
+      };
+    });
   }
 
   /**
@@ -1349,39 +1364,12 @@ export class PraeComponent implements OnInit, AfterViewInit {
     }
 
     try {
-      // Calcula total de estágios por empresa, filtrando por semestre se disponível
       let empresasComTotal = this.empresasComSupervisores.map((e: any) => {
-        let totalObrigatorios = 0;
-
-        // Verifica se os supervisores têm informação de semestre
-        const temSemestreNosDados = (e.supervisores || []).some((sup: any) => sup.semestre != null);
-
-        if (temSemestreNosDados) {
-          // Parse dos semestres selecionados (formato ano/semestre)
-          const [anoIni, semIni] = String(this.semestreGraficoInicial).split('/').map(Number);
-          const [anoFim, semFim] = String(this.semestreGraficoFinal).split('/').map(Number);
-
-          // Se tem semestre, filtra pelos semestres selecionados
-          const supervisoresFiltrados = (e.supervisores || []).filter((sup: any) => {
-            const ano = sup.ano || new Date().getFullYear();
-            const semestre = sup.semestre;
-            const valorSup = ano * 100 + semestre;
-            const valorIni = anoIni * 100 + semIni;
-            const valorFim = anoFim * 100 + semFim;
-            return valorSup >= valorIni && valorSup <= valorFim;
-          });
-
-          totalObrigatorios = supervisoresFiltrados.reduce((sum: number, sup: any) => sum + (sup.quantidadeEstagios || 0), 0);
-        } else {
-          // Se não tem semestre, usa todos os supervisores
-          totalObrigatorios = (e.supervisores || []).reduce((sum: number, sup: any) => sum + (sup.quantidadeEstagios || 0), 0);
-        }
-
         return {
           nomeEmpresa: e.nomeEmpresa,
-          quantidadeObrigatorios: totalObrigatorios,
-          quantidadeNaoObrigatorios: 0,
-          total: totalObrigatorios
+          quantidadeObrigatorios: e.quantidadeObrigatorios || 0,
+          quantidadeNaoObrigatorios: e.quantidadeNaoObrigatorios || 0,
+          total: (e.quantidadeObrigatorios || 0) + (e.quantidadeNaoObrigatorios || 0)
         };
       });
 

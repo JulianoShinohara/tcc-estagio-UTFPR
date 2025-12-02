@@ -27,92 +27,113 @@
     <div
       *ngFor="let periodo of estudante.periodosEstagio; let i = index"
       class="periodo-container"
+      [class.collapsed]="isColapsed(periodo)"
     >
-      <h3>Estágio {{ i + 1 }}</h3>
-
-      <div class="info-adicional">
-        <p><strong>Empresa:</strong> {{ periodo.empresa || 'Não informado' }}</p>
-        <p>
-          <strong>Tipo:</strong>
-          <span [class.obrigatorio]="periodo.obrigatorio" [class.optativo]="!periodo.obrigatorio">
-            {{ periodo.obrigatorio ? 'Estágio Obrigatório' : 'Estágio Não Obrigatório' }}
+      <!-- Header do estágio clicável -->
+      <div class="periodo-header" (click)="toggleEstagio(i)">
+        <div class="periodo-info-header">
+          <div class="header-top">
+            <h3>Estágio {{ i + 1 }}</h3>
+          </div>
+          <span class="periodo-summary">
+            {{ periodo.empresa || 'Empresa não informada' }} |
+            {{ periodo.obrigatorio ? 'Obrigatório' : 'Não Obrigatório' }}
           </span>
-        </p>
-      </div>
-
-      <div class="periodo-info">
-        <p>
-          <strong>Início:</strong>
-          {{ periodo.dataInicioEstagio}}
-        </p>
-        <p>
-          <strong>Término:</strong>
-          {{ periodo.dataTerminoEstagio}}
-        </p>
-      </div>
-
-      <div class="relatorios-section">
-        <h4>Relatórios Parciais do Aluno</h4>
-        <div
-          *ngFor="let relatorio of periodo.datasRelatoriosParciaisAluno"
-          class="relatorio-item"
-        >
-          <p>
-            Período:
-            {{ relatorio.inicioPeriodoRelatorio}} até
-            {{ relatorio.fimPeriodoRelatorio}}
-            <span class="status" [class.enviado]="relatorio.enviado">
-              {{ relatorio.enviado ? "✓ Enviado" : "✗ Pendente" }}
-            </span>
-          </p>
+          <span class="periodo-datas">
+            {{ periodo.dataInicioEstagio }} até {{ periodo.dataTerminoEstagio }}
+          </span>
+        </div>
+        <div class="collapse-icon-small" [class.expanded]="!isColapsed(periodo)">
+          <i>▼</i>
         </div>
       </div>
 
-      <div class="relatorios-section">
-        <h4>Relatórios Parciais do Orientador</h4>
-        <div
-          *ngFor="let relatorio of periodo.datasRelatoriosParciaisOrientador"
-          class="relatorio-item"
-        >
+      <!-- Conteúdo do estágio (colapsável) -->
+      <div class="periodo-content" *ngIf="!isColapsed(periodo)">
+        <div class="info-adicional">
+          <p><strong>Empresa:</strong> {{ periodo.empresa || 'Não informado' }}</p>
           <p>
-            Período:
-            {{ relatorio.inicioPeriodoRelatorio}} até
-            {{ relatorio.fimPeriodoRelatorio}}
-            <span class="status" [class.enviado]="relatorio.enviado">
-              {{ relatorio.enviado ? "✓ Enviado" : "✗ Pendente" }}
+            <strong>Tipo:</strong>
+            <span [class.obrigatorio]="periodo.obrigatorio" [class.optativo]="!periodo.obrigatorio">
+              {{ periodo.obrigatorio ? 'Estágio Obrigatório' : 'Estágio Não Obrigatório' }}
             </span>
           </p>
         </div>
-      </div>
 
-      <div *ngIf="periodo.dataRelatorioVisita" class="relatorio-visita">
-        <h4>Relatório de Visita</h4>
-        <p>
-          Data limite: {{ periodo.dataRelatorioVisita}}
-          <span class="status" [class.enviado]="periodo.enviadoRelatorioVisita">
-            {{ periodo.enviadoRelatorioVisita ? "✓ Enviado" : "✗ Pendente" }}
-          </span>
-        </p>
-      </div>
+        <div class="periodo-info">
+          <p>
+            <strong>Início:</strong>
+            {{ periodo.dataInicioEstagio}}
+          </p>
+          <p>
+            <strong>Término:</strong>
+            {{ periodo.dataTerminoEstagio}}
+          </p>
+        </div>
 
-      <div class="relatorio-final">
-        <h4>Relatório Final</h4>
-        <p>
-          Data limite: {{ periodo.dataRelatorioFinal}}
-          <span class="status" [class.enviado]="periodo.enviadoRelatorioFinal">
-            {{ periodo.enviadoRelatorioFinal ? "✓ Enviado" : "✗ Pendente" }}
-          </span>
-        </p>
-      </div>
+        <div class="relatorios-section">
+          <h5>Relatórios Parciais do Aluno</h5>
+          <div
+            *ngFor="let relatorio of periodo.datasRelatoriosParciaisAluno"
+            class="relatorio-item"
+          >
+            <p>
+              Período:
+              {{ relatorio.inicioPeriodoRelatorio}} até
+              {{ relatorio.fimPeriodoRelatorio}}
+              <span class="status" [class.enviado]="relatorio.enviado">
+                {{ relatorio.enviado ? "✓ Enviado" : "✗ Pendente" }}
+              </span>
+            </p>
+          </div>
+        </div>
 
-      <div *ngIf="periodo.intervaloAvaliacao" class="avaliacao-section">
-        <h4>Avaliação de Estágio</h4>
-        <p>
-          Período:
-          {{ periodo.intervaloAvaliacao.dataInicio}}
-          até
-          {{ periodo.intervaloAvaliacao.dataFim}}
-        </p>
+        <div class="relatorios-section">
+          <h5>Relatórios Parciais do Orientador</h5>
+          <div
+            *ngFor="let relatorio of periodo.datasRelatoriosParciaisOrientador"
+            class="relatorio-item"
+          >
+            <p>
+              Período:
+              {{ relatorio.inicioPeriodoRelatorio}} até
+              {{ relatorio.fimPeriodoRelatorio}}
+              <span class="status" [class.enviado]="relatorio.enviado">
+                {{ relatorio.enviado ? "✓ Enviado" : "✗ Pendente" }}
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <div *ngIf="periodo.dataRelatorioVisita" class="relatorio-visita">
+          <h5>Relatório de Visita</h5>
+          <p>
+            Data limite: {{ periodo.dataRelatorioVisita}}
+            <span class="status" [class.enviado]="periodo.enviadoRelatorioVisita">
+              {{ periodo.enviadoRelatorioVisita ? "✓ Enviado" : "✗ Pendente" }}
+            </span>
+          </p>
+        </div>
+
+        <div class="relatorio-final">
+          <h5>Relatório Final</h5>
+          <p>
+            Data limite: {{ periodo.dataRelatorioFinal}}
+            <span class="status" [class.enviado]="periodo.enviadoRelatorioFinal">
+              {{ periodo.enviadoRelatorioFinal ? "✓ Enviado" : "✗ Pendente" }}
+            </span>
+          </p>
+        </div>
+
+        <div *ngIf="periodo.intervaloAvaliacao" class="avaliacao-section">
+          <h5>Avaliação de Estágio</h5>
+          <p>
+            Período:
+            {{ periodo.intervaloAvaliacao.dataInicio}}
+            até
+            {{ periodo.intervaloAvaliacao.dataFim}}
+          </p>
+        </div>
       </div>
     </div>
   </div>

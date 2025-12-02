@@ -6,6 +6,10 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { NgIf, NgFor, DatePipe } from '@angular/common';
 
+interface PeriodoEstagioExtendido extends PeriodoEstagioDto {
+  collapsed: boolean;
+}
+
 @Component({
   selector: 'app-estudante',
   standalone: true,
@@ -30,7 +34,15 @@ export class EstudanteComponent {
     this.estudanteService.buscarEstagioPorNome(this.nomeEstudante)
       .subscribe({
         next: (data: EstudanteDto) => {
-          this.estudante = data;
+          // Adiciona propriedade collapsed aos períodos
+          const estudanteComCollapse = {
+            ...data,
+            periodosEstagio: data.periodosEstagio.map(periodo => ({
+              ...periodo,
+              collapsed: true
+            }))
+          };
+          this.estudante = estudanteComCollapse;
           this.isLoading = false;
         },
         error: (err: any) => {
@@ -38,5 +50,16 @@ export class EstudanteComponent {
           this.isLoading = false;
         }
       });
+  }
+
+  toggleEstagio(index: number): void {
+    if (this.estudante?.periodosEstagio[index]) {
+      (this.estudante.periodosEstagio[index] as any).collapsed =
+        !(this.estudante.periodosEstagio[index] as any).collapsed;
+    }
+  }
+
+  isColapsed(periodo: PeriodoEstagioDto): boolean {
+    return (periodo as any).collapsed ?? true;
   }
 }

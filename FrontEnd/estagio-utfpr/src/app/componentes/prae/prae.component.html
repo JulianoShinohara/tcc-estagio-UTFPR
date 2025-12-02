@@ -592,40 +592,6 @@
                 </div>
               </div>
 
-              <!-- Segunda linha de filtros - Semestres -->
-              <div class="filter-row" style="margin-top: 15px;">
-                <div class="filter-group-inline">
-                  <label for="semestreGraficoInicial" style="margin-right: 8px;">De (Semestre):</label>
-                  <p-dropdown
-                    id="semestreGraficoInicial"
-                    [(ngModel)]="semestreGraficoInicial"
-                    [options]="listaSemestresGrafico"
-                    optionLabel="label"
-                    optionValue="value"
-                    (onChange)="aplicarFiltroSemestreGrafico()"
-                    placeholder="Selecione"
-                    [showClear]="false"
-                    [style]="{'width': '180px'}"
-                  ></p-dropdown>
-                </div>
-
-                <div style="margin: 0 10px; color: #071D41; font-weight: bold;">até</div>
-
-                <div class="filter-group-inline">
-                  <label for="semestreGraficoFinal" style="margin-right: 8px;">Até (Semestre):</label>
-                  <p-dropdown
-                    id="semestreGraficoFinal"
-                    [(ngModel)]="semestreGraficoFinal"
-                    [options]="listaSemestresGrafico"
-                    optionLabel="label"
-                    optionValue="value"
-                    (onChange)="aplicarFiltroSemestreGrafico()"
-                    placeholder="Selecione"
-                    [showClear]="false"
-                    [style]="{'width': '180px'}"
-                  ></p-dropdown>
-                </div>
-              </div>
             </div>
 
             <p-chart type="bar" [data]="chartDataEmpresasEstagios" [options]="chartOptionsEmpresasEstagios" [style]="{'height': '500px'}"></p-chart>

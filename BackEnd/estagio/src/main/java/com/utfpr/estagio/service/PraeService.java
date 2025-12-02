@@ -16,13 +16,20 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.utfpr.estagio.dto.EstagiosPorSemestreDto;
+import com.utfpr.estagio.dto.ContadoresEmpresaDto;
+import com.utfpr.estagio.dto.ContadoresMesInicioFimDto;
+import com.utfpr.estagio.dto.ContadoresSemestreDto;
+import com.utfpr.estagio.dto.ContadoresSemestreInicioFimDto;
+import com.utfpr.estagio.dto.ContadoresSupervisorComEmpresaDto;
+import com.utfpr.estagio.dto.ContadoresSupervisorDto;
+import com.utfpr.estagio.dto.ContadoresTiposSemestreDto;
+import com.utfpr.estagio.dto.ContadoresUceDto;
 import com.utfpr.estagio.dto.EmpresaComSupervisoresDto;
+import com.utfpr.estagio.dto.EstagiosPorSemestreDto;
 import com.utfpr.estagio.dto.EstatisticasDuracaoEstagioDto;
 import com.utfpr.estagio.dto.EstatisticasDuracaoPorTipoDto;
 import com.utfpr.estagio.dto.EstatisticasDuracaoPorTipoEstagio;
 import com.utfpr.estagio.dto.EstatisticasSemestreDto;
-import com.utfpr.estagio.dto.OrientadorUceDto;
 import com.utfpr.estagio.dto.QtdeEstagiosOrientadorDto;
 import com.utfpr.estagio.dto.SupervisorDto;
 import com.utfpr.estagio.dto.TiposEstagiosPorSemestreDto;
@@ -56,8 +63,8 @@ public class PraeService {
 	private static final int COL_SUPERVISOR = 17;
 
 	/**
-	 * Retorna estatísticas de orientações por orientador e semestre
-	 * Conta cada estágio apenas uma vez por semestre em que está ativo
+	 * Retorna estatísticas de orientações por orientador e semestre Conta cada
+	 * estágio apenas uma vez por semestre em que está ativo
 	 */
 	public List<QtdeEstagiosOrientadorDto> getEstatisticasOrientacoesPorSemestre() {
 		try {
@@ -71,7 +78,7 @@ public class PraeService {
 				return new ArrayList<>();
 			}
 
-			Map<String, Map<String, ContadoresSemestre>> estatisticasPorOrientador = new HashMap<>();
+			Map<String, Map<String, ContadoresSemestreDto>> estatisticasPorOrientador = new HashMap<>();
 
 			List<List<Object>> valoresSemCabecalho = valores.subList(1, valores.size());
 
@@ -100,8 +107,8 @@ public class PraeService {
 					int anoAtual = inicio.getYear();
 					int mesAtual = inicio.getMonthValue();
 
-					while (anoAtual < termino.getYear() ||
-					       (anoAtual == termino.getYear() && mesAtual <= termino.getMonthValue())) {
+					while (anoAtual < termino.getYear()
+							|| (anoAtual == termino.getYear() && mesAtual <= termino.getMonthValue())) {
 
 						int semestre = mesAtual <= 6 ? 1 : 2;
 						String chaveSemestre = anoAtual + "/" + semestre;
@@ -121,9 +128,10 @@ public class PraeService {
 
 						estatisticasPorOrientador.putIfAbsent(nomeOrientador, new HashMap<>());
 						estatisticasPorOrientador.get(nomeOrientador).putIfAbsent(chaveSemestre,
-								new ContadoresSemestre(ano, semestre));
+								new ContadoresSemestreDto(ano, semestre));
 
-						ContadoresSemestre contadores = estatisticasPorOrientador.get(nomeOrientador).get(chaveSemestre);
+						ContadoresSemestreDto contadores = estatisticasPorOrientador.get(nomeOrientador)
+								.get(chaveSemestre);
 						if (obrigatorio) {
 							contadores.incrementarObrigatorios();
 						} else {
@@ -170,29 +178,6 @@ public class PraeService {
 		}
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	private static class ContadoresSemestre {
-		private int ano;
-		private int semestre;
-		private int obrigatorios = 0;
-		private int naoObrigatorios = 0;
-
-		public ContadoresSemestre(int ano, int semestre) {
-			this.ano = ano;
-			this.semestre = semestre;
-		}
-
-		public void incrementarObrigatorios() {
-			this.obrigatorios++;
-		}
-
-		public void incrementarNaoObrigatorios() {
-			this.naoObrigatorios++;
-		}
-	}
-
 	/**
 	 * Retorna quantidade de estágios iniciados e finalizados por mês
 	 */
@@ -204,7 +189,7 @@ public class PraeService {
 				return new ArrayList<>();
 			}
 
-			Map<String, ContadoresMesInicioFim> estatisticasPorMes = new HashMap<>();
+			Map<String, ContadoresMesInicioFimDto> estatisticasPorMes = new HashMap<>();
 
 			List<List<Object>> valoresSemCabecalho = valores.subList(1, valores.size());
 
@@ -222,9 +207,9 @@ public class PraeService {
 
 					String chaveInicio = formatarChaveMes(inicio);
 					estatisticasPorMes.putIfAbsent(chaveInicio,
-							new ContadoresMesInicioFim(inicio.getYear(), inicio.getMonthValue()));
+							new ContadoresMesInicioFimDto(inicio.getYear(), inicio.getMonthValue()));
 
-					ContadoresMesInicioFim contadorInicio = estatisticasPorMes.get(chaveInicio);
+					ContadoresMesInicioFimDto contadorInicio = estatisticasPorMes.get(chaveInicio);
 					if (obrigatorio) {
 						contadorInicio.incrementarIniciadosObrigatorios();
 					} else {
@@ -233,9 +218,9 @@ public class PraeService {
 
 					String chaveTermino = formatarChaveMes(termino);
 					estatisticasPorMes.putIfAbsent(chaveTermino,
-							new ContadoresMesInicioFim(termino.getYear(), termino.getMonthValue()));
+							new ContadoresMesInicioFimDto(termino.getYear(), termino.getMonthValue()));
 
-					ContadoresMesInicioFim contadorTermino = estatisticasPorMes.get(chaveTermino);
+					ContadoresMesInicioFimDto contadorTermino = estatisticasPorMes.get(chaveTermino);
 					if (obrigatorio) {
 						contadorTermino.incrementarFinalizadosObrigatorios();
 					} else {
@@ -278,7 +263,7 @@ public class PraeService {
 				return new ArrayList<>();
 			}
 
-			Map<String, ContadoresSemestreInicioFim> estatisticasPorSemestre = new HashMap<>();
+			Map<String, ContadoresSemestreInicioFimDto> estatisticasPorSemestre = new HashMap<>();
 
 			List<List<Object>> valoresSemCabecalho = valores.subList(1, valores.size());
 
@@ -300,9 +285,9 @@ public class PraeService {
 					// Contabiliza o semestre de início
 					String chaveSemestreInicio = semestreInicio.ano() + "/" + semestreInicio.semestre();
 					estatisticasPorSemestre.putIfAbsent(chaveSemestreInicio,
-							new ContadoresSemestreInicioFim(semestreInicio.ano(), semestreInicio.semestre()));
+							new ContadoresSemestreInicioFimDto(semestreInicio.ano(), semestreInicio.semestre()));
 
-					ContadoresSemestreInicioFim contadorInicio = estatisticasPorSemestre.get(chaveSemestreInicio);
+					ContadoresSemestreInicioFimDto contadorInicio = estatisticasPorSemestre.get(chaveSemestreInicio);
 					if (obrigatorio) {
 						contadorInicio.incrementarIniciadosObrigatorios();
 					} else {
@@ -312,8 +297,8 @@ public class PraeService {
 					int anoAtual = semestreInicio.ano();
 					int semestreAtual = semestreInicio.semestre();
 
-					while (anoAtual < semestreTermino.ano() ||
-						   (anoAtual == semestreTermino.ano() && semestreAtual < semestreTermino.semestre())) {
+					while (anoAtual < semestreTermino.ano()
+							|| (anoAtual == semestreTermino.ano() && semestreAtual < semestreTermino.semestre())) {
 
 						if (semestreAtual == 1) {
 							semestreAtual = 2;
@@ -324,9 +309,9 @@ public class PraeService {
 
 						String chaveSemestreIntermediario = anoAtual + "/" + semestreAtual;
 						estatisticasPorSemestre.putIfAbsent(chaveSemestreIntermediario,
-								new ContadoresSemestreInicioFim(anoAtual, semestreAtual));
+								new ContadoresSemestreInicioFimDto(anoAtual, semestreAtual));
 
-						ContadoresSemestreInicioFim contadorIntermediario = estatisticasPorSemestre
+						ContadoresSemestreInicioFimDto contadorIntermediario = estatisticasPorSemestre
 								.get(chaveSemestreIntermediario);
 						if (obrigatorio) {
 							contadorIntermediario.incrementarIniciadosObrigatorios();
@@ -337,9 +322,9 @@ public class PraeService {
 
 					String chaveSemestreTermino = semestreTermino.ano() + "/" + semestreTermino.semestre();
 					estatisticasPorSemestre.putIfAbsent(chaveSemestreTermino,
-							new ContadoresSemestreInicioFim(semestreTermino.ano(), semestreTermino.semestre()));
+							new ContadoresSemestreInicioFimDto(semestreTermino.ano(), semestreTermino.semestre()));
 
-					ContadoresSemestreInicioFim contadorTermino = estatisticasPorSemestre.get(chaveSemestreTermino);
+					ContadoresSemestreInicioFimDto contadorTermino = estatisticasPorSemestre.get(chaveSemestreTermino);
 					if (obrigatorio) {
 						contadorTermino.incrementarFinalizadosObrigatorios();
 					} else {
@@ -374,72 +359,6 @@ public class PraeService {
 		}
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	private static class ContadoresSemestreInicioFim {
-		private int ano;
-		private int semestre;
-		private int iniciadosObrigatorios = 0;
-		private int iniciadosNaoObrigatorios = 0;
-		private int finalizadosObrigatorios = 0;
-		private int finalizadosNaoObrigatorios = 0;
-
-		public ContadoresSemestreInicioFim(int ano, int semestre) {
-			this.ano = ano;
-			this.semestre = semestre;
-		}
-
-		public void incrementarIniciadosObrigatorios() {
-			this.iniciadosObrigatorios++;
-		}
-
-		public void incrementarIniciadosNaoObrigatorios() {
-			this.iniciadosNaoObrigatorios++;
-		}
-
-		public void incrementarFinalizadosObrigatorios() {
-			this.finalizadosObrigatorios++;
-		}
-
-		public void incrementarFinalizadosNaoObrigatorios() {
-			this.finalizadosNaoObrigatorios++;
-		}
-	}
-
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	private static class ContadoresMesInicioFim {
-		private int ano;
-		private int mes;
-		private int iniciadosObrigatorios = 0;
-		private int iniciadosNaoObrigatorios = 0;
-		private int finalizadosObrigatorios = 0;
-		private int finalizadosNaoObrigatorios = 0;
-
-		public ContadoresMesInicioFim(int ano, int mes) {
-			this.ano = ano;
-			this.mes = mes;
-		}
-
-		public void incrementarIniciadosObrigatorios() {
-			this.iniciadosObrigatorios++;
-		}
-
-		public void incrementarIniciadosNaoObrigatorios() {
-			this.iniciadosNaoObrigatorios++;
-		}
-
-		public void incrementarFinalizadosObrigatorios() {
-			this.finalizadosObrigatorios++;
-		}
-
-		public void incrementarFinalizadosNaoObrigatorios() {
-			this.finalizadosNaoObrigatorios++;
-		}
-	}
-
 	/**
 	 * Retorna quantidade de cada tipo de estágio agrupado por semestre
 	 */
@@ -451,7 +370,7 @@ public class PraeService {
 				return new ArrayList<>();
 			}
 
-			Map<String, ContadoresTiposSemestre> estatisticasPorSemestre = new HashMap<>();
+			Map<String, ContadoresTiposSemestreDto> estatisticasPorSemestre = new HashMap<>();
 
 			List<List<Object>> valoresSemCabecalho = valores.subList(1, valores.size());
 
@@ -473,7 +392,7 @@ public class PraeService {
 					String chaveSemestre = semestre.ano() + "/" + semestre.semestre();
 
 					estatisticasPorSemestre.putIfAbsent(chaveSemestre,
-							new ContadoresTiposSemestre(semestre.ano(), semestre.semestre()));
+							new ContadoresTiposSemestreDto(semestre.ano(), semestre.semestre()));
 
 					estatisticasPorSemestre.get(chaveSemestre).incrementarTipo(tipoEstagio);
 
@@ -503,25 +422,6 @@ public class PraeService {
 		}
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	private static class ContadoresTiposSemestre {
-		private int ano;
-		private int semestre;
-		private Map<String, Integer> quantidadePorTipo = new HashMap<>();
-
-		public ContadoresTiposSemestre(int ano, int semestre) {
-			this.ano = ano;
-			this.semestre = semestre;
-			this.quantidadePorTipo = new HashMap<>();
-		}
-
-		public void incrementarTipo(String tipo) {
-			quantidadePorTipo.put(tipo, quantidadePorTipo.getOrDefault(tipo, 0) + 1);
-		}
-	}
-
 	/**
 	 * Retorna lista de unidades cedentes com estatísticas
 	 */
@@ -533,7 +433,7 @@ public class PraeService {
 				return new ArrayList<>();
 			}
 
-			Map<String, ContadoresUce> estatisticasPorSupervisor = new HashMap<>();
+			Map<String, ContadoresUceDto> estatisticasPorSupervisor = new HashMap<>();
 
 			List<List<Object>> valoresSemCabecalho = valores.subList(1, valores.size());
 
@@ -557,9 +457,9 @@ public class PraeService {
 					double valorBolsa = parseValorMonetario(linha, COL_BOLSA);
 					double valorBeneficio = parseValorMonetario(linha, COL_BENEFICIO);
 
-					estatisticasPorSupervisor.putIfAbsent(nomeSupervisor, new ContadoresUce(nomeSupervisor));
+					estatisticasPorSupervisor.putIfAbsent(nomeSupervisor, new ContadoresUceDto(nomeSupervisor));
 
-					ContadoresUce contador = estatisticasPorSupervisor.get(nomeSupervisor);
+					ContadoresUceDto contador = estatisticasPorSupervisor.get(nomeSupervisor);
 					contador.adicionarValorBolsa(valorBolsa);
 					contador.adicionarValorBeneficio(valorBeneficio);
 
@@ -576,17 +476,14 @@ public class PraeService {
 
 			List<UnidadeCedenteDto> resultado = estatisticasPorSupervisor.values().stream()
 					.<UnidadeCedenteDto>map(contador -> {
-						return UnidadeCedenteDto.builder()
-								.nomeEmpresa(contador.getNomeEmpresa())
-								.orientadores(new ArrayList<>())
-								.valorMedioBolsa(contador.getValorMedioBolsa())
+						return UnidadeCedenteDto.builder().nomeEmpresa(contador.getNomeEmpresa())
+								.orientadores(new ArrayList<>()).valorMedioBolsa(contador.getValorMedioBolsa())
 								.valorMedioBeneficio(contador.getValorMedioBeneficio())
 								.quantidadeObrigatorios(contador.getObrigatorios())
 								.quantidadeNaoObrigatorios(contador.getNaoObrigatorios())
-								.totalEstagios(contador.getObrigatorios() + contador.getNaoObrigatorios())
-								.build();
+								.totalEstagios(contador.getObrigatorios() + contador.getNaoObrigatorios()).build();
 					}).sorted(Comparator.comparing(UnidadeCedenteDto::getTotalEstagios).reversed()
-								.thenComparing(UnidadeCedenteDto::getNomeEmpresa))
+							.thenComparing(UnidadeCedenteDto::getNomeEmpresa))
 					.collect(Collectors.toList());
 
 			return resultado;
@@ -609,10 +506,11 @@ public class PraeService {
 				return new ArrayList<>();
 			}
 
-			// Chave: empresa|supervisor|ano|semestre (para agregar dados de um mesmo supervisor por semestre)
-			Map<String, ContadoresSupervisorComEmpresa> estatisticasPorSupervisor = new HashMap<>();
+			// Chave: empresa|supervisor|ano|semestre (para agregar dados de um mesmo
+			// supervisor por semestre)
+			Map<String, ContadoresSupervisorComEmpresaDto> estatisticasPorSupervisor = new HashMap<>();
 			// Mapa para agregar por empresa
-			Map<String, ContadoresEmpresa> estatisticasPorEmpresa = new HashMap<>();
+			Map<String, ContadoresEmpresaDto> estatisticasPorEmpresa = new HashMap<>();
 
 			List<List<Object>> valoresSemCabecalho = valores.subList(1, valores.size());
 
@@ -661,16 +559,17 @@ public class PraeService {
 					double valorBolsa = parseValorMonetario(linha, COL_BOLSA);
 					double valorBeneficio = parseValorMonetario(linha, COL_BENEFICIO);
 
-					estatisticasPorSupervisor.putIfAbsent(chave, new ContadoresSupervisorComEmpresa(nomeEmpresa, nomeSupervisor));
-					ContadoresSupervisorComEmpresa contadorSupervisor = estatisticasPorSupervisor.get(chave);
+					estatisticasPorSupervisor.putIfAbsent(chave,
+							new ContadoresSupervisorComEmpresaDto(nomeEmpresa, nomeSupervisor));
+					ContadoresSupervisorComEmpresaDto contadorSupervisor = estatisticasPorSupervisor.get(chave);
 					contadorSupervisor.adicionarValorBolsa(valorBolsa);
 					contadorSupervisor.adicionarValorBeneficio(valorBeneficio);
 					contadorSupervisor.incrementarQuantidadeEstagios();
 
 					contadorSupervisor.definirAnoSemestre(ano, semestre);
 
-					estatisticasPorEmpresa.putIfAbsent(nomeEmpresa, new ContadoresEmpresa(nomeEmpresa));
-					ContadoresEmpresa contadorEmpresa = estatisticasPorEmpresa.get(nomeEmpresa);
+					estatisticasPorEmpresa.putIfAbsent(nomeEmpresa, new ContadoresEmpresaDto(nomeEmpresa));
+					ContadoresEmpresaDto contadorEmpresa = estatisticasPorEmpresa.get(nomeEmpresa);
 					contadorEmpresa.adicionarValorBolsa(valorBolsa);
 					contadorEmpresa.adicionarValorBeneficio(valorBeneficio);
 
@@ -689,42 +588,34 @@ public class PraeService {
 
 			Map<String, List<SupervisorDto>> supervisoresPorEmpresa = new HashMap<>();
 
-			for (ContadoresSupervisorComEmpresa contador : estatisticasPorSupervisor.values()) {
-				SupervisorDto supervisor = SupervisorDto.builder()
-						.nomeSupervisor(contador.getNomeSupervisor())
-						.quantidadeEstagios(contador.getQuantidadeEstagios())
-						.ano(contador.getAno())
-						.semestre(contador.getSemestre())
-						.build();
+			for (ContadoresSupervisorComEmpresaDto contador : estatisticasPorSupervisor.values()) {
+				SupervisorDto supervisor = SupervisorDto.builder().nomeSupervisor(contador.getNomeSupervisor())
+						.quantidadeEstagios(contador.getQuantidadeEstagios()).ano(contador.getAno())
+						.semestre(contador.getSemestre()).build();
 
-				supervisoresPorEmpresa.computeIfAbsent(contador.getNomeEmpresa(), k -> new ArrayList<>()).add(supervisor);
+				supervisoresPorEmpresa.computeIfAbsent(contador.getNomeEmpresa(), k -> new ArrayList<>())
+						.add(supervisor);
 			}
 
-			List<EmpresaComSupervisoresDto> resultado = supervisoresPorEmpresa.entrySet().stream()
-					.map(entry -> {
-						String nomeEmpresa = entry.getKey();
-						List<SupervisorDto> supervisores = entry.getValue().stream()
-								.sorted(Comparator.comparing(SupervisorDto::getQuantidadeEstagios).reversed()
-										.thenComparing(SupervisorDto::getNomeSupervisor))
-								.collect(Collectors.toList());
+			List<EmpresaComSupervisoresDto> resultado = supervisoresPorEmpresa.entrySet().stream().map(entry -> {
+				String nomeEmpresa = entry.getKey();
+				List<SupervisorDto> supervisores = entry
+						.getValue().stream().sorted(Comparator.comparing(SupervisorDto::getQuantidadeEstagios)
+								.reversed().thenComparing(SupervisorDto::getNomeSupervisor))
+						.collect(Collectors.toList());
 
-						ContadoresEmpresa contadoresEmpresa = estatisticasPorEmpresa.get(nomeEmpresa);
-						double valorMedioBolsa = contadoresEmpresa != null ? contadoresEmpresa.getValorMedioBolsa() : 0.0;
-						double valorMedioBeneficio = contadoresEmpresa != null ? contadoresEmpresa.getValorMedioBeneficio() : 0.0;
-						int quantidadeObrigatorios = contadoresEmpresa != null ? contadoresEmpresa.getObrigatorios() : 0;
-						int quantidadeNaoObrigatorios = contadoresEmpresa != null ? contadoresEmpresa.getNaoObrigatorios() : 0;
+				ContadoresEmpresaDto contadoresEmpresa = estatisticasPorEmpresa.get(nomeEmpresa);
+				double valorMedioBolsa = contadoresEmpresa != null ? contadoresEmpresa.getValorMedioBolsa() : 0.0;
+				double valorMedioBeneficio = contadoresEmpresa != null ? contadoresEmpresa.getValorMedioBeneficio()
+						: 0.0;
+				int quantidadeObrigatorios = contadoresEmpresa != null ? contadoresEmpresa.getObrigatorios() : 0;
+				int quantidadeNaoObrigatorios = contadoresEmpresa != null ? contadoresEmpresa.getNaoObrigatorios() : 0;
 
-						return EmpresaComSupervisoresDto.builder()
-								.nomeEmpresa(nomeEmpresa)
-								.supervisores(supervisores)
-								.valorMedioBolsa(valorMedioBolsa)
-								.valorMedioBeneficio(valorMedioBeneficio)
-								.quantidadeObrigatorios(quantidadeObrigatorios)
-								.quantidadeNaoObrigatorios(quantidadeNaoObrigatorios)
-								.build();
-					})
-					.sorted(Comparator.comparing(EmpresaComSupervisoresDto::getNomeEmpresa))
-					.collect(Collectors.toList());
+				return EmpresaComSupervisoresDto.builder().nomeEmpresa(nomeEmpresa).supervisores(supervisores)
+						.valorMedioBolsa(valorMedioBolsa).valorMedioBeneficio(valorMedioBeneficio)
+						.quantidadeObrigatorios(quantidadeObrigatorios)
+						.quantidadeNaoObrigatorios(quantidadeNaoObrigatorios).build();
+			}).sorted(Comparator.comparing(EmpresaComSupervisoresDto::getNomeEmpresa)).collect(Collectors.toList());
 
 			return resultado;
 
@@ -754,184 +645,6 @@ public class PraeService {
 		}
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	private static class ContadoresUce {
-		private String nomeEmpresa;
-		private Map<String, Integer> orientadores = new HashMap<>();
-		private List<Double> valoresBolsa = new ArrayList<>();
-		private List<Double> valoresBeneficio = new ArrayList<>();
-		private int obrigatorios = 0;
-		private int naoObrigatorios = 0;
-
-		public ContadoresUce(String nomeEmpresa) {
-			this.nomeEmpresa = nomeEmpresa;
-			this.orientadores = new HashMap<>();
-			this.valoresBolsa = new ArrayList<>();
-			this.valoresBeneficio = new ArrayList<>();
-		}
-
-		public void incrementarOrientador(String nomeOrientador) {
-			orientadores.put(nomeOrientador, orientadores.getOrDefault(nomeOrientador, 0) + 1);
-		}
-
-		public void adicionarValorBolsa(double valor) {
-			if (valor > 0) {
-				valoresBolsa.add(valor);
-			}
-		}
-
-		public void adicionarValorBeneficio(double valor) {
-			if (valor > 0) {
-				valoresBeneficio.add(valor);
-			}
-		}
-
-		public void incrementarObrigatorios() {
-			this.obrigatorios++;
-		}
-
-		public void incrementarNaoObrigatorios() {
-			this.naoObrigatorios++;
-		}
-
-		public double getValorMedioBolsa() {
-			if (valoresBolsa.isEmpty()) {
-				return 0.0;
-			}
-			return valoresBolsa.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-		}
-
-		public double getValorMedioBeneficio() {
-			if (valoresBeneficio.isEmpty()) {
-				return 0.0;
-			}
-			return valoresBeneficio.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-		}
-	}
-
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	private static class ContadoresSupervisor {
-		private String nomeSupervisor;
-		private List<Double> valoresBolsa = new ArrayList<>();
-		private List<Double> valoresBeneficio = new ArrayList<>();
-		private int quantidadeEstagios = 0;
-		private int obrigatorios = 0;
-		private int naoObrigatorios = 0;
-
-		public ContadoresSupervisor(String nomeSupervisor) {
-			this.nomeSupervisor = nomeSupervisor;
-			this.valoresBolsa = new ArrayList<>();
-			this.valoresBeneficio = new ArrayList<>();
-		}
-
-		public void adicionarValorBolsa(double valor) {
-			if (valor > 0) {
-				valoresBolsa.add(valor);
-			}
-		}
-
-		public void adicionarValorBeneficio(double valor) {
-			if (valor > 0) {
-				valoresBeneficio.add(valor);
-			}
-		}
-
-		public void incrementarQuantidadeEstagios() {
-			this.quantidadeEstagios++;
-		}
-
-		public void incrementarObrigatorios() {
-			this.obrigatorios++;
-		}
-
-		public void incrementarNaoObrigatorios() {
-			this.naoObrigatorios++;
-		}
-
-		public double getValorMedioBolsa() {
-			if (valoresBolsa.isEmpty()) {
-				return 0.0;
-			}
-			return valoresBolsa.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-		}
-
-		public double getValorMedioBeneficio() {
-			if (valoresBeneficio.isEmpty()) {
-				return 0.0;
-			}
-			return valoresBeneficio.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-		}
-	}
-
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	private static class ContadoresSupervisorComEmpresa {
-		private String nomeEmpresa;
-		private String nomeSupervisor;
-		private List<Double> valoresBolsa = new ArrayList<>();
-		private List<Double> valoresBeneficio = new ArrayList<>();
-		private int quantidadeEstagios = 0;
-		private int obrigatorios = 0;
-		private int naoObrigatorios = 0;
-		private Integer ano;
-		private Integer semestre;
-
-		public ContadoresSupervisorComEmpresa(String nomeEmpresa, String nomeSupervisor) {
-			this.nomeEmpresa = nomeEmpresa;
-			this.nomeSupervisor = nomeSupervisor;
-			this.valoresBolsa = new ArrayList<>();
-			this.valoresBeneficio = new ArrayList<>();
-		}
-
-		public void definirAnoSemestre(Integer ano, Integer semestre) {
-			this.ano = ano;
-			this.semestre = semestre;
-		}
-
-		public void adicionarValorBolsa(double valor) {
-			if (valor > 0) {
-				valoresBolsa.add(valor);
-			}
-		}
-
-		public void adicionarValorBeneficio(double valor) {
-			if (valor > 0) {
-				valoresBeneficio.add(valor);
-			}
-		}
-
-		public void incrementarQuantidadeEstagios() {
-			this.quantidadeEstagios++;
-		}
-
-		public void incrementarObrigatorios() {
-			this.obrigatorios++;
-		}
-
-		public void incrementarNaoObrigatorios() {
-			this.naoObrigatorios++;
-		}
-
-		public double getValorMedioBolsa() {
-			if (valoresBolsa.isEmpty()) {
-				return 0.0;
-			}
-			return valoresBolsa.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-		}
-
-		public double getValorMedioBeneficio() {
-			if (valoresBeneficio.isEmpty()) {
-				return 0.0;
-			}
-			return valoresBeneficio.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-		}
-	}
-
 	private String formatarChaveMes(LocalDate data) {
 		return data.getYear() + "/" + String.format("%02d", data.getMonthValue());
 	}
@@ -943,59 +656,9 @@ public class PraeService {
 		return data.getMonthValue() <= 6 ? 1 : 2;
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	private static class ContadoresEmpresa {
-		private String nomeEmpresa;
-		private List<Double> valoresBolsa = new ArrayList<>();
-		private List<Double> valoresBeneficio = new ArrayList<>();
-		private int obrigatorios = 0;
-		private int naoObrigatorios = 0;
-
-		public ContadoresEmpresa(String nomeEmpresa) {
-			this.nomeEmpresa = nomeEmpresa;
-			this.valoresBolsa = new ArrayList<>();
-			this.valoresBeneficio = new ArrayList<>();
-		}
-
-		public void adicionarValorBolsa(double valor) {
-			if (valor > 0) {
-				valoresBolsa.add(valor);
-			}
-		}
-
-		public void adicionarValorBeneficio(double valor) {
-			if (valor > 0) {
-				valoresBeneficio.add(valor);
-			}
-		}
-
-		public void incrementarObrigatorios() {
-			this.obrigatorios++;
-		}
-
-		public void incrementarNaoObrigatorios() {
-			this.naoObrigatorios++;
-		}
-
-		public double getValorMedioBolsa() {
-			if (valoresBolsa.isEmpty()) {
-				return 0.0;
-			}
-			return valoresBolsa.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-		}
-
-		public double getValorMedioBeneficio() {
-			if (valoresBeneficio.isEmpty()) {
-				return 0.0;
-			}
-			return valoresBeneficio.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-		}
-	}
-
 	/**
-	 * Calcula estatísticas de duração dos estágios incluindo média, mínima, máxima e quartis
+	 * Calcula estatísticas de duração dos estágios incluindo média, mínima, máxima
+	 * e quartis
 	 */
 	public EstatisticasDuracaoEstagioDto getEstatisticasDuracaoEstagios() throws IOException {
 		List<List<Object>> dados = googleSheetsService.getEstudantesFromSheet();
@@ -1029,15 +692,8 @@ public class PraeService {
 		}
 
 		if (duracoes.isEmpty()) {
-			return EstatisticasDuracaoEstagioDto.builder()
-					.durracaoMedia(0.0)
-					.duracaoMinima(0L)
-					.duracaoMaxima(0L)
-					.primeiroQuartil(0L)
-					.mediana(0L)
-					.terceiroQuartil(0L)
-					.totalEstagios(0)
-					.build();
+			return EstatisticasDuracaoEstagioDto.builder().durracaoMedia(0.0).duracaoMinima(0L).duracaoMaxima(0L)
+					.primeiroQuartil(0L).mediana(0L).terceiroQuartil(0L).totalEstagios(0).build();
 		}
 
 		// Ordena as durações
@@ -1051,19 +707,13 @@ public class PraeService {
 		long q1 = calcularPercentil(duracoes, 25);
 		long q3 = calcularPercentil(duracoes, 75);
 
-		return EstatisticasDuracaoEstagioDto.builder()
-				.durracaoMedia(media)
-				.duracaoMinima(minima)
-				.duracaoMaxima(maxima)
-				.primeiroQuartil(q1)
-				.mediana(mediana)
-				.terceiroQuartil(q3)
-				.totalEstagios(duracoes.size())
-				.build();
+		return EstatisticasDuracaoEstagioDto.builder().durracaoMedia(media).duracaoMinima(minima).duracaoMaxima(maxima)
+				.primeiroQuartil(q1).mediana(mediana).terceiroQuartil(q3).totalEstagios(duracoes.size()).build();
 	}
 
 	/**
-	 * Calcula estatísticas de duração separadas por tipo (obrigatório/não obrigatório)
+	 * Calcula estatísticas de duração separadas por tipo (obrigatório/não
+	 * obrigatório)
 	 */
 	public com.utfpr.estagio.dto.EstatisticasDuracaoPorTipoDto getEstatisticasDuracaoPorTipo() throws IOException {
 		List<List<Object>> dados = googleSheetsService.getEstudantesFromSheet();
@@ -1110,10 +760,8 @@ public class PraeService {
 		EstatisticasDuracaoEstagioDto statsObrigatorios = calcularEstatisticas(duracoesObrigatorios);
 		EstatisticasDuracaoEstagioDto statsNaoObrigatorios = calcularEstatisticas(duracoesNaoObrigatorios);
 
-		return com.utfpr.estagio.dto.EstatisticasDuracaoPorTipoDto.builder()
-				.obrigatorios(statsObrigatorios)
-				.naoObrigatorios(statsNaoObrigatorios)
-				.build();
+		return com.utfpr.estagio.dto.EstatisticasDuracaoPorTipoDto.builder().obrigatorios(statsObrigatorios)
+				.naoObrigatorios(statsNaoObrigatorios).build();
 	}
 
 	/**
@@ -1121,15 +769,8 @@ public class PraeService {
 	 */
 	private EstatisticasDuracaoEstagioDto calcularEstatisticas(List<Long> duracoes) {
 		if (duracoes.isEmpty()) {
-			return EstatisticasDuracaoEstagioDto.builder()
-					.durracaoMedia(0.0)
-					.duracaoMinima(0L)
-					.duracaoMaxima(0L)
-					.primeiroQuartil(0L)
-					.mediana(0L)
-					.terceiroQuartil(0L)
-					.totalEstagios(0)
-					.build();
+			return EstatisticasDuracaoEstagioDto.builder().durracaoMedia(0.0).duracaoMinima(0L).duracaoMaxima(0L)
+					.primeiroQuartil(0L).mediana(0L).terceiroQuartil(0L).totalEstagios(0).build();
 		}
 
 		// Ordena as durações
@@ -1143,19 +784,13 @@ public class PraeService {
 		long q1 = calcularPercentil(duracoes, 25);
 		long q3 = calcularPercentil(duracoes, 75);
 
-		return EstatisticasDuracaoEstagioDto.builder()
-				.durracaoMedia(media)
-				.duracaoMinima(minima)
-				.duracaoMaxima(maxima)
-				.primeiroQuartil(q1)
-				.mediana(mediana)
-				.terceiroQuartil(q3)
-				.totalEstagios(duracoes.size())
-				.build();
+		return EstatisticasDuracaoEstagioDto.builder().durracaoMedia(media).duracaoMinima(minima).duracaoMaxima(maxima)
+				.primeiroQuartil(q1).mediana(mediana).terceiroQuartil(q3).totalEstagios(duracoes.size()).build();
 	}
 
 	/**
-	 * Calcula um percentil para uma lista ordenada de valores usando interpolação linear
+	 * Calcula um percentil para uma lista ordenada de valores usando interpolação
+	 * linear
 	 */
 	private long calcularPercentil(List<Long> valores, int percentil) {
 		if (valores.isEmpty()) {
@@ -1185,7 +820,8 @@ public class PraeService {
 	}
 
 	/**
-	 * Calcula estatísticas de duração separadas por tipo de estágio e depois por obrigatório/não obrigatório
+	 * Calcula estatísticas de duração separadas por tipo de estágio e depois por
+	 * obrigatório/não obrigatório
 	 */
 	public EstatisticasDuracaoPorTipoEstagio getEstatisticasDuracaoPorTipoEstagio() throws IOException {
 		List<List<Object>> dados = googleSheetsService.getEstudantesFromSheet();
@@ -1222,8 +858,7 @@ public class PraeService {
 
 					duracoesAgrupadasPorTipo.putIfAbsent(tipoEstagioStr, new HashMap<>());
 					String chaveObrigatorio = obrigatorio ? "obrigatorios" : "naoObrigatorios";
-					duracoesAgrupadasPorTipo.get(tipoEstagioStr)
-						.putIfAbsent(chaveObrigatorio, new ArrayList<>());
+					duracoesAgrupadasPorTipo.get(tipoEstagioStr).putIfAbsent(chaveObrigatorio, new ArrayList<>());
 
 					duracoesAgrupadasPorTipo.get(tipoEstagioStr).get(chaveObrigatorio).add(duracao);
 					tiposEncontrados.add(tipoEstagioStr);
@@ -1245,9 +880,7 @@ public class PraeService {
 			EstatisticasDuracaoEstagioDto statsNaoObrigatorios = calcularEstatisticas(duracoesNaoObrigatorios);
 
 			EstatisticasDuracaoPorTipoDto estatisticasDoTipo = EstatisticasDuracaoPorTipoDto.builder()
-				.obrigatorios(statsObrigatorios)
-				.naoObrigatorios(statsNaoObrigatorios)
-				.build();
+					.obrigatorios(statsObrigatorios).naoObrigatorios(statsNaoObrigatorios).build();
 
 			estatisticasPorTipo.put(tipo, estatisticasDoTipo);
 		}
@@ -1255,9 +888,7 @@ public class PraeService {
 		List<String> tiposOrdenados = new ArrayList<>(tiposEncontrados);
 		tiposOrdenados.sort(String::compareTo);
 
-		return EstatisticasDuracaoPorTipoEstagio.builder()
-			.estatisticasPorTipo(estatisticasPorTipo)
-			.tiposDisponiveis(tiposOrdenados)
-			.build();
+		return EstatisticasDuracaoPorTipoEstagio.builder().estatisticasPorTipo(estatisticasPorTipo)
+				.tiposDisponiveis(tiposOrdenados).build();
 	}
 }

@@ -145,7 +145,7 @@ public class EstudanteService {
 
 				verificarRelatoriosEnviados(nomeNormalizado, relatoriosEnviados, relatoriosAluno, relatoriosOrientador,
 						obrigatorio ? periodo.getDataRelatorioVisita() : null,
-						obrigatorio ? periodo.getDataRelatorioFinal() : null, periodo);
+						periodo.getDataRelatorioFinal(), periodo);
 
 				periodos.add(periodo);
 			}
